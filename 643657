@@ -91,22 +91,21 @@ local Library = {
 
     HudRegistry = {};
 
-    -- COMPLETELY NEW COLOR SCHEME - Modern dark with neon accents
-    FontColor = Color3.fromRGB(230, 230, 230);
-    MainColor = Color3.fromRGB(18, 22, 28);        -- Deep slate
-    BackgroundColor = Color3.fromRGB(12, 16, 22);  -- Darker slate
+    FontColor = Color3.fromRGB(245, 245, 245);
+    MainColor = Color3.fromRGB(32, 32, 32);
+    BackgroundColor = Color3.fromRGB(22, 22, 22);
 
-    AccentColor = Color3.fromRGB(0, 255, 200);     -- Cyan/Turquoise
-    DisabledAccentColor = Color3.fromRGB(80, 100, 110);
+    AccentColor = Color3.fromRGB(0, 120, 255);
+    DisabledAccentColor = Color3.fromRGB(142, 142, 142);
 
-    OutlineColor = Color3.fromRGB(40, 48, 58);      -- Subtle border
-    DisabledOutlineColor = Color3.fromRGB(50, 55, 62);
+    OutlineColor = Color3.fromRGB(45, 45, 45);
+    DisabledOutlineColor = Color3.fromRGB(60, 60, 60);
 
-    DisabledTextColor = Color3.fromRGB(140, 150, 160);
+    DisabledTextColor = Color3.fromRGB(142, 142, 142);
 
-    RiskColor = Color3.fromRGB(255, 80, 100);       -- Soft red
+    RiskColor = Color3.fromRGB(255, 70, 70);
 
-    Black = Color3.new(0.05, 0.05, 0.08);
+    Black = Color3.new(20, 20, 20);
     Font = Enum.Font.Gotham,
 
     OpenedFrames = {};
@@ -161,7 +160,7 @@ table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
         end;
 
         Library.CurrentRainbowHue = Hue;
-        Library.CurrentRainbowColor = Color3.fromHSV(Hue, 0.8, 1);
+        Library.CurrentRainbowColor = Color3.fromHSV(Hue, 0.9, 1);
     end;
 end));
 
@@ -293,8 +292,8 @@ function Library:ApplyTextStroke(Inst)
     Inst.TextStrokeTransparency = 1;
 
     return Library:Create('UIStroke', {
-        Color = Color3.new(0, 0, 0);
-        Thickness = 1;
+        Color = Color3.new(20, 20, 20);
+        Thickness = 1.2;
         LineJoinMode = Enum.LineJoinMode.Round;
         Parent = Inst;
     });
@@ -306,9 +305,11 @@ function Library:CreateLabel(Properties, IsHud)
         Font = Library.Font;
         TextColor3 = Library.FontColor;
         TextSize = 16;
-        TextStrokeTransparency = 1; -- No stroke for cleaner look
+        TextStrokeTransparency = 0;
         RichText = true; -- Added to support color fonts
     });
+
+    Library:ApplyTextStroke(_Instance);
 
     Library:AddToRegistry(_Instance, {
         TextColor3 = 'FontColor';
@@ -452,7 +453,7 @@ function Library:MakeResizable(Instance, MinSize)
         Visible = true;
         ClipsDescendants = true;
         ZIndex = 1;
-        Parent = Instance;
+        Parent = Instance;--Library.ScreenGui;
     });
 
     local ResizerImage = Library:Create('ImageButton', {
@@ -465,8 +466,8 @@ function Library:MakeResizable(Instance, MinSize)
         Parent = Resizer;
     });
 
-    Library:Create('UICorner', {
-        CornerRadius = UDim.new(1, 0);
+    local ResizerImageUICorner = Library:Create('UICorner', {
+        CornerRadius = UDim.new(0.5, 0);
         Parent = ResizerImage;
     });
 
@@ -484,7 +485,7 @@ function Library:MakeResizable(Instance, MinSize)
         ResizerImage.Size = UDim2.new(2, 0, 2, 0);
         ResizerImage.Parent = Resizer;
         ResizerImage.BackgroundTransparency = Transparency;
-        ResizerImage.Parent = Resizer;
+        ResizerImageUICorner.Parent = ResizerImage;
         OffsetPos = nil;
     end;
 
@@ -495,6 +496,7 @@ function Library:MakeResizable(Instance, MinSize)
             ResizerImage.BackgroundTransparency = 1
             ResizerImage.Size = UDim2.fromOffset(Library.ScreenGui.AbsoluteSize.X, Library.ScreenGui.AbsoluteSize.Y);
             ResizerImage.Position = UDim2.new();
+            ResizerImageUICorner.Parent = nil;
             ResizerImage.Parent = Library.ScreenGui;
         end;
     end);
@@ -527,7 +529,7 @@ function Library:AddToolTip(InfoStr, DisabledInfoStr, HoverInstance)
     local Tooltip = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.AccentColor;
-        BorderSizePixel = 2,
+        BorderSizePixel = 0;
 
         ZIndex = 100;
         Parent = Library.ScreenGui;
@@ -540,15 +542,23 @@ function Library:AddToolTip(InfoStr, DisabledInfoStr, HoverInstance)
         Parent = Tooltip;
     });
 
+    local Padding = Library:Create('UIPadding', {
+        PaddingLeft = UDim.new(0, 6);
+        PaddingRight = UDim.new(0, 6);
+        PaddingTop = UDim.new(0, 4);
+        PaddingBottom = UDim.new(0, 4);
+        Parent = Tooltip;
+    });
+
     local Label = Library:CreateLabel({
-        Position = UDim2.fromOffset(6, 3);
+        Position = UDim2.fromOffset(0, 0);
         
-        TextSize = 14;
+        TextSize = 13;
         Text = InfoStr;
         TextColor3 = Library.FontColor;
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = Tooltip.ZIndex + 1;
-        RichText = true;
+        RichText = true; -- Added to support color fonts
 
         Parent = Tooltip;
     });
@@ -573,11 +583,11 @@ function Library:AddToolTip(InfoStr, DisabledInfoStr, HoverInstance)
     local function UpdateText(Text)
         if Text == nil then return end
 
-        local X, Y = Library:GetTextBounds(Text, Library.Font, 14 * DPIScale);
+        local X, Y = Library:GetTextBounds(Text, Library.Font, 13 * DPIScale);
 
         Label.Text = Text;
-        Tooltip.Size = UDim2.fromOffset(X + 12, Y + 6);
         Label.Size = UDim2.fromOffset(X, Y);
+        Tooltip.Size = UDim2.fromOffset(X + 12, Y + 8);
     end
     UpdateText(InfoStr);
 
@@ -733,6 +743,7 @@ function Library:GetDarkerColor(Color)
     return Color3.fromHSV(H, S, V / 1.5);
 end;
 Library.AccentColorDark = Library:GetDarkerColor(Library.AccentColor);
+Library.AccentColorLight = Color3.fromRGB(64, 164, 255);
 
 function Library:AddToRegistry(Instance, Properties, IsHud)
     local Idx = #Library.Registry + 1;
@@ -771,6 +782,16 @@ function Library:RemoveFromRegistry(Instance)
 end;
 
 function Library:UpdateColorsUsingRegistry()
+    -- TODO: Could have an 'active' list of objects
+    -- where the active list only contains Visible objects.
+
+    -- IMPL: Could setup .Changed events on the AddToRegistry function
+    -- that listens for the 'Visible' propert being changed.
+    -- Visible: true => Add to active list, and call UpdateColors function
+    -- Visible: false => Remove from active list.
+
+    -- The above would be especially efficient for a rainbow menu color or live color-changing.
+
     for Idx, Object in next, Library.Registry do
         for Property, ColorIdx in next, Object.Properties do
             if typeof(ColorIdx) == "string" then
@@ -783,15 +804,18 @@ function Library:UpdateColorsUsingRegistry()
 end;
 
 function Library:GiveSignal(Signal)
+    -- Only used for signals not attached to library instances, as those should be cleaned up on object destruction by Roblox
     table.insert(Library.Signals, Signal)
 end
 
 function Library:Unload()
+    -- Unload all of the signals
     for Idx = #Library.Signals, 1, -1 do
         local Connection = table.remove(Library.Signals, Idx)
         Connection:Disconnect()
     end
 
+    -- Call our unload callback, maybe to undo some hooks etc
     for _, UnloadCallback in pairs(Library.UnloadSignals) do
         Library:SafeCallback(UnloadCallback)
     end
@@ -824,6 +848,7 @@ do
     function BaseAddonsFuncs:AddColorPicker(Idx, Info)
         local ParentObj = self
         local ToggleLabel = self.TextLabel;
+        --local Container = self.Container;
 
         assert(Info.Default, 'AddColorPicker: Missing default value.');
 
@@ -847,8 +872,8 @@ do
 
         local DisplayFrame = Library:Create('Frame', {
             BackgroundColor3 = ColorPicker.Value;
-            BorderColor3 = Library.OutlineColor;
-            BorderSizePixel = 2,
+            BorderColor3 = Library:GetDarkerColor(ColorPicker.Value);
+            BorderSizePixel = 0;
             Size = UDim2.new(0, 28, 0, 18);
             ZIndex = 6;
             Parent = ToggleLabel;
@@ -859,13 +884,40 @@ do
             Parent = DisplayFrame;
         });
 
+        local DisplayFrameStroke = Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = DisplayFrame;
+        });
+
+        -- Transparency image taken from https://github.com/matas3535/SplixPrivateDrawingLibrary/blob/main/Library.lua cus i'm lazy
+        local CheckerFrame = Library:Create('ImageLabel', {
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, -2, 1, -2);
+            Position = UDim2.new(0, 1, 0, 1);
+            ZIndex = 5;
+            Image = 'http://www.roblox.com/asset/?id=12977615774';
+            Visible = not not Info.Transparency;
+            Parent = DisplayFrame;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 4);
+            Parent = CheckerFrame;
+        });
+
+        -- 1/16/23
+        -- Rewrote this to be placed inside the Library ScreenGui
+        -- There was some issue which caused RelativeOffset to be way off
+        -- Thus the color picker would never show
+
         local PickerFrameOuter = Library:Create('Frame', {
             Name = 'Color';
             BackgroundColor3 = Library.BackgroundColor;
             BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BorderSizePixel = 0;
             Position = UDim2.fromOffset(DisplayFrame.AbsolutePosition.X, DisplayFrame.AbsolutePosition.Y + 18),
-            Size = UDim2.fromOffset(240, Info.Transparency and 285 or 265);
+            Size = UDim2.fromOffset(240, Info.Transparency and 280 or 262);
             Visible = false;
             ZIndex = 15;
             Parent = ScreenGui,
@@ -876,29 +928,48 @@ do
             Parent = PickerFrameOuter;
         });
 
+        local PickerFrameOuterStroke = Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = PickerFrameOuter;
+        });
+
         DisplayFrame:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
             PickerFrameOuter.Position = UDim2.fromOffset(DisplayFrame.AbsolutePosition.X, DisplayFrame.AbsolutePosition.Y + 18);
         end)
 
         local PickerFrameInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 1, -4);
-            Position = UDim2.new(0, 2, 0, 2);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderMode = Enum.BorderMode.Inset;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 16;
             Parent = PickerFrameOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 6);
+            CornerRadius = UDim.new(0, 8);
+            Parent = PickerFrameInner;
+        });
+
+        local PickerFrameInnerStroke = Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = PickerFrameInner;
+        });
+
+        local Highlight = Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 0, 2);
+            ZIndex = 17;
             Parent = PickerFrameInner;
         });
 
         local SatVibMapOuter = Library:Create('Frame', {
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
-            Position = UDim2.new(0, 4, 0, 25);
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Position = UDim2.new(0, 5, 0, 25);
             Size = UDim2.new(0, 200, 0, 200);
             ZIndex = 17;
             Parent = PickerFrameInner;
@@ -909,16 +980,30 @@ do
             Parent = SatVibMapOuter;
         });
 
+        local SatVibMapInner = Library:Create('Frame', {
+            BackgroundColor3 = Library.BackgroundColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
+            ZIndex = 18;
+            Parent = SatVibMapOuter;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 6);
+            Parent = SatVibMapInner;
+        });
+
         local SatVibMap = Library:Create('ImageLabel', {
             BorderSizePixel = 0;
             Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 18;
             Image = 'rbxassetid://4155801252';
-            Parent = SatVibMapOuter;
+            Parent = SatVibMapInner;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = UDim.new(0, 6);
             Parent = SatVibMap;
         });
 
@@ -932,11 +1017,21 @@ do
             Parent = SatVibMap;
         });
 
+        local CursorInner = Library:Create('ImageLabel', {
+            Size = UDim2.new(0, CursorOuter.Size.X.Offset - 2, 0, CursorOuter.Size.Y.Offset - 2);
+            Position = UDim2.new(0, 1, 0, 1);
+            BackgroundTransparency = 1;
+            Image = 'http://www.roblox.com/asset/?id=9619665977';
+            ImageColor3 = Library.AccentColor;
+            ZIndex = 20;
+            Parent = CursorOuter;
+        })
+
         local HueSelectorOuter = Library:Create('Frame', {
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
-            Position = UDim2.new(0, 212, 0, 25);
-            Size = UDim2.new(0, 15, 0, 200);
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Position = UDim2.new(0, 210, 0, 25);
+            Size = UDim2.new(0, 20, 0, 200);
             ZIndex = 17;
             Parent = PickerFrameInner;
         });
@@ -955,65 +1050,87 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = UDim.new(0, 6);
             Parent = HueSelectorInner;
         });
 
         local HueCursor = Library:Create('Frame', { 
             BackgroundColor3 = Color3.new(1, 1, 1);
-            AnchorPoint = Vector2.new(0, 0.5);
-            BorderColor3 = Library.Black;
-            BorderSizePixel = 2,
-            Size = UDim2.new(1, 0, 0, 2);
+            AnchorPoint = Vector2.new(0.5, 0.5);
+            BorderColor3 = Color3.new(0, 0, 0);
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 0, 3);
             ZIndex = 18;
             Parent = HueSelectorInner;
         });
 
+        Library:Create('UIStroke', {
+            Color = Library.AccentColor;
+            Thickness = 1;
+            Parent = HueCursor;
+        });
+
         local HueBoxOuter = Library:Create('Frame', {
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
-            Position = UDim2.fromOffset(4, 230),
-            Size = UDim2.new(0.5, -6, 0, 22),
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Position = UDim2.fromOffset(5, 230),
+            Size = UDim2.new(0.5, -8, 0, 22),
             ZIndex = 18,
             Parent = PickerFrameInner;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = UDim.new(0, 6);
             Parent = HueBoxOuter;
         });
 
         local HueBoxInner = Library:Create('Frame', {
             BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -2, 1, -2);
-            Position = UDim2.new(0, 1, 0, 1);
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 18,
             Parent = HueBoxOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 3);
+            CornerRadius = UDim.new(0, 6);
+            Parent = HueBoxInner;
+        });
+
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = HueBoxInner;
+        });
+
+        Library:Create('UIGradient', {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 230, 230))
+            });
+            Rotation = 90;
             Parent = HueBoxInner;
         });
 
         local HueBox = Library:Create('TextBox', {
             BackgroundTransparency = 1;
-            Position = UDim2.new(0, 4, 0, 0);
-            Size = UDim2.new(1, -4, 1, 0);
+            Position = UDim2.new(0, 5, 0, 0);
+            Size = UDim2.new(1, -5, 1, 0);
             Font = Library.Font;
-            PlaceholderColor3 = Color3.fromRGB(150, 150, 150);
-            PlaceholderText = 'Hex',
+            PlaceholderColor3 = Color3.fromRGB(180, 180, 180);
+            PlaceholderText = 'Hex color',
             Text = '#FFFFFF',
             TextColor3 = Library.FontColor;
             TextSize = 13;
-            TextStrokeTransparency = 1;
+            TextStrokeTransparency = 0;
             TextXAlignment = Enum.TextXAlignment.Left;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 20,
             Parent = HueBoxInner;
         });
+
+        Library:ApplyTextStroke(HueBox);
 
         local RgbBoxBase = Library:Create(HueBoxOuter:Clone(), {
             Position = UDim2.new(0.5, 2, 0, 230),
@@ -1022,40 +1139,45 @@ do
 
         local RgbBox = Library:Create(RgbBoxBase.Frame:FindFirstChild('TextBox'), {
             Text = '255, 255, 255',
-            PlaceholderText = 'RGB',
+            PlaceholderText = 'RGB color',
             TextColor3 = Library.FontColor,
-            RichText = true;
+            RichText = true; -- Added to support color fonts
         });
 
         local TransparencyBoxOuter, TransparencyBoxInner, TransparencyCursor;
         
         if Info.Transparency then 
             TransparencyBoxOuter = Library:Create('Frame', {
-                BorderColor3 = Library.AccentColor;
-                BorderSizePixel = 2,
-                Position = UDim2.fromOffset(4, 256),
-                Size = UDim2.new(1, -8, 0, 18),
+                BorderColor3 = Library.OutlineColor;
+                BorderSizePixel = 0;
+                Position = UDim2.fromOffset(5, 256);
+                Size = UDim2.new(1, -10, 0, 16);
                 ZIndex = 19;
                 Parent = PickerFrameInner;
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 4);
+                CornerRadius = UDim.new(0, 6);
                 Parent = TransparencyBoxOuter;
             });
 
             TransparencyBoxInner = Library:Create('Frame', {
                 BackgroundColor3 = ColorPicker.Value;
-                BorderColor3 = Color3.new(0, 0, 0);
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -2, 1, -2);
-                Position = UDim2.new(0, 1, 0, 1);
+                BorderColor3 = Library.OutlineColor;
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 1, 0);
                 ZIndex = 19;
                 Parent = TransparencyBoxOuter;
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 3);
+                CornerRadius = UDim.new(0, 6);
+                Parent = TransparencyBoxInner;
+            });
+
+            Library:Create('UIStroke', {
+                Color = Library.OutlineColor;
+                Thickness = 1;
                 Parent = TransparencyBoxInner;
             });
 
@@ -1070,29 +1192,35 @@ do
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 3);
+                CornerRadius = UDim.new(0, 6);
                 Parent = Library:Create('Frame', {Parent = TransparencyBoxInner});
             });
 
             TransparencyCursor = Library:Create('Frame', { 
                 BackgroundColor3 = Color3.new(1, 1, 1);
                 AnchorPoint = Vector2.new(0.5, 0);
-                BorderColor3 = Library.AccentColor;
-                BorderSizePixel = 2,
+                BorderColor3 = Color3.new(0, 0, 0);
+                BorderSizePixel = 0;
                 Size = UDim2.new(0, 2, 1, 0);
                 ZIndex = 21;
                 Parent = TransparencyBoxInner;
             });
+
+            Library:Create('UIStroke', {
+                Color = Library.AccentColor;
+                Thickness = 1;
+                Parent = TransparencyCursor;
+            });
         end;
 
         local DisplayLabel = Library:CreateLabel({
-            Size = UDim2.new(1, 0, 0, 18);
-            Position = UDim2.fromOffset(5, 3);
+            Size = UDim2.new(1, 0, 0, 16);
+            Position = UDim2.fromOffset(5, 5);
             TextXAlignment = Enum.TextXAlignment.Left;
-            TextSize = 14;
-            Text = ColorPicker.Title,
+            TextSize = 13;
+            Text = ColorPicker.Title;
             TextWrapped = false;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 16;
             Parent = PickerFrameInner;
         });
@@ -1101,8 +1229,9 @@ do
         do
             ContextMenu.Options = {}
             ContextMenu.Container = Library:Create('Frame', {
+                BackgroundColor3 = Library.BackgroundColor;
                 BorderColor3 = Library.AccentColor;
-                BorderSizePixel = 2,
+                BorderSizePixel = 0,
                 ZIndex = 14,
 
                 Visible = false,
@@ -1114,18 +1243,29 @@ do
                 Parent = ContextMenu.Container;
             });
 
-            ContextMenu.Inner = Library:Create('Frame', {
-                BackgroundColor3 = Library.BackgroundColor;
-                BorderColor3 = Color3.new(0, 0, 0);
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -4, 1, -4);
-                Position = UDim2.new(0, 2, 0, 2);
-                ZIndex = 15;
+            Library:Create('UIStroke', {
+                Color = Library.OutlineColor;
+                Thickness = 1;
                 Parent = ContextMenu.Container;
             });
 
+            ContextMenu.Inner = Library:Create('Frame', {
+                BackgroundColor3 = Library.MainColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderSizePixel = 0;
+                Size = UDim2.fromScale(1, 1);
+                ZIndex = 15;
+                Parent = ContextMenu.Inner;
+            });
+
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 4);
+                CornerRadius = UDim.new(0, 6);
+                Parent = ContextMenu.Inner;
+            });
+
+            Library:Create('UIStroke', {
+                Color = Library.OutlineColor;
+                Thickness = 1;
                 Parent = ContextMenu.Inner;
             });
 
@@ -1133,14 +1273,13 @@ do
                 Name = 'Layout',
                 FillDirection = Enum.FillDirection.Vertical;
                 SortOrder = Enum.SortOrder.LayoutOrder;
-                Padding = UDim.new(0, 2);
                 Parent = ContextMenu.Inner;
             });
 
             Library:Create('UIPadding', {
                 Name = 'Padding',
-                PaddingLeft = UDim.new(0, 6),
-                PaddingRight = UDim.new(0, 6),
+                PaddingLeft = UDim.new(0, 8),
+                PaddingRight = UDim.new(0, 8),
                 PaddingTop = UDim.new(0, 4),
                 PaddingBottom = UDim.new(0, 4),
                 Parent = ContextMenu.Inner,
@@ -1157,12 +1296,12 @@ do
                 local menuWidth = 80
                 for i, label in next, ContextMenu.Inner:GetChildren() do
                     if label:IsA('TextLabel') then
-                        menuWidth = math.max(menuWidth, label.TextBounds.X)
+                        menuWidth = math.max(menuWidth, label.TextBounds.X + 16)
                     end
                 end
 
                 ContextMenu.Container.Size = UDim2.fromOffset(
-                    menuWidth + 16,
+                    menuWidth,
                     ContextMenu.Inner.Layout.AbsoluteContentSize.Y + 8
                 )
             end
@@ -1174,7 +1313,8 @@ do
             task.spawn(updateMenuSize)
 
             Library:AddToRegistry(ContextMenu.Inner, {
-                BackgroundColor3 = 'BackgroundColor';
+                BackgroundColor3 = 'MainColor';
+                BorderColor3 = 'OutlineColor';
             });
 
             function ContextMenu:Show()
@@ -1198,28 +1338,34 @@ do
                     Callback = function() end
                 end
 
-                local Button = Library:CreateLabel({
+                local Button = Library:Create('TextButton', {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 20),
+                    Text = "",
+                    ZIndex = 16,
+                    Parent = self.Inner,
+                });
+
+                local ButtonLabel = Library:CreateLabel({
                     Active = false;
-                    Size = UDim2.new(1, 0, 0, 18);
+                    Size = UDim2.new(1, 0, 1, 0);
                     TextSize = 13;
                     Text = Str;
                     ZIndex = 16;
-                    Parent = self.Inner;
+                    Parent = Button;
                     TextXAlignment = Enum.TextXAlignment.Left,
-                    RichText = true;
+                    RichText = true; -- Added to support color fonts
                 });
 
-                Library:OnHighlight(Button, Button, 
+                Library:OnHighlight(Button, ButtonLabel, 
                     { TextColor3 = 'AccentColor' },
                     { TextColor3 = 'FontColor' }
                 );
 
                 Button.InputBegan:Connect(function(Input)
-                    if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then
-                        return
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        Callback()
                     end
-
-                    Callback()
                 end)
             end
 
@@ -1248,13 +1394,14 @@ do
         end
         ColorPicker.ContextMenu = ContextMenu;
 
-        Library:AddToRegistry(PickerFrameInner, { BackgroundColor3 = 'BackgroundColor'; });
-        Library:AddToRegistry(SatVibMapOuter, { BorderColor3 = 'AccentColor'; });
-        Library:AddToRegistry(HueSelectorOuter, { BorderColor3 = 'AccentColor'; });
-        Library:AddToRegistry(HueBoxOuter, { BorderColor3 = 'AccentColor'; });
-        Library:AddToRegistry(RgbBoxBase, { BorderColor3 = 'AccentColor'; });
-        Library:AddToRegistry(HueBox, { TextColor3 = 'FontColor', });
+        Library:AddToRegistry(PickerFrameInner, { BackgroundColor3 = 'MainColor'; BorderColor3 = 'OutlineColor'; });
+        Library:AddToRegistry(Highlight, { BackgroundColor3 = 'AccentColor'; });
+        Library:AddToRegistry(SatVibMapInner, { BackgroundColor3 = 'BackgroundColor'; BorderColor3 = 'OutlineColor'; });
+
+        Library:AddToRegistry(HueBoxInner, { BackgroundColor3 = 'MainColor'; BorderColor3 = 'OutlineColor'; });
+        Library:AddToRegistry(RgbBoxBase.Frame, { BackgroundColor3 = 'MainColor'; BorderColor3 = 'OutlineColor'; });
         Library:AddToRegistry(RgbBox, { TextColor3 = 'FontColor', });
+        Library:AddToRegistry(HueBox, { TextColor3 = 'FontColor', });
 
         local SequenceTable = {};
 
@@ -1297,7 +1444,7 @@ do
             Library:Create(DisplayFrame, {
                 BackgroundColor3 = ColorPicker.Value;
                 BackgroundTransparency = ColorPicker.Transparency;
-                BorderColor3 = Library.AccentColor;
+                BorderColor3 = Library:GetDarkerColor(ColorPicker.Value);
             });
 
             if TransparencyBoxInner then
@@ -1357,8 +1504,8 @@ do
         end;
 
         SatVibMap.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
                     local MinX = SatVibMap.AbsolutePosition.X;
                     local MaxX = MinX + SatVibMap.AbsoluteSize.X;
                     local MouseX = math.clamp(Mouse.X, MinX, MaxX);
@@ -1379,8 +1526,8 @@ do
         end);
 
         HueSelectorInner.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
                     local MinY = HueSelectorInner.AbsolutePosition.Y;
                     local MaxY = MinY + HueSelectorInner.AbsoluteSize.Y;
                     local MouseY = math.clamp(Mouse.Y, MinY, MaxY);
@@ -1400,7 +1547,7 @@ do
                 return;
             end;
 
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                 if PickerFrameOuter.Visible then
                     ColorPicker:Hide()
                 else
@@ -1415,8 +1562,8 @@ do
 
         if TransparencyBoxInner then
             TransparencyBoxInner.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
                         local MinX = TransparencyBoxInner.AbsolutePosition.X;
                         local MaxX = MinX + TransparencyBoxInner.AbsoluteSize.X;
                         local MouseX = math.clamp(Mouse.X, MinX, MaxX);
@@ -1434,7 +1581,7 @@ do
         end;
 
         Library:GiveSignal(InputService.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                 local AbsPos, AbsSize = PickerFrameOuter.AbsolutePosition, PickerFrameOuter.AbsoluteSize;
 
                 if Mouse.X < AbsPos.X or Mouse.X > AbsPos.X + AbsSize.X
@@ -1466,13 +1613,14 @@ do
     function BaseAddonsFuncs:AddKeyPicker(Idx, Info)
         local ParentObj = self;
         local ToggleLabel = self.TextLabel;
+        --local Container = self.Container;
 
         assert(Info.Default, 'AddKeyPicker: Missing default value.');
 
         local KeyPicker = {
             Value = Info.Default;
             Toggled = false;
-            Mode = Info.Mode or 'Toggle';
+            Mode = Info.Mode or 'Toggle'; -- Always, Toggle, Hold
             Type = 'KeyPicker';
             Callback = Info.Callback or function(Value) end;
             ChangedCallback = Info.ChangedCallback or function(New) end;
@@ -1485,9 +1633,8 @@ do
         end
 
         local PickOuter = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
             Size = UDim2.new(0, 28, 0, 18);
             ZIndex = 6;
             Parent = ToggleLabel;
@@ -1499,26 +1646,28 @@ do
         });
 
         local PickInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -2, 1, -2);
-            Position = UDim2.new(0, 1, 0, 1);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 7;
             Parent = PickOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 3);
+            CornerRadius = UDim.new(0, 4);
             Parent = PickInner;
         });
 
-        Library:AddToRegistry(PickOuter, {
-            BorderColor3 = 'AccentColor';
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = PickInner;
         });
 
         Library:AddToRegistry(PickInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
 
         local DisplayLabel = Library:CreateLabel({
@@ -1526,14 +1675,15 @@ do
             TextSize = 12;
             Text = Info.Default;
             TextWrapped = true;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 8;
             Parent = PickInner;
         });
 
         local ModeSelectOuter = Library:Create('Frame', {
+            BackgroundColor3 = Library.BackgroundColor;
             BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BorderSizePixel = 0;
             Position = UDim2.fromOffset(ToggleLabel.AbsolutePosition.X + ToggleLabel.AbsoluteSize.X + 4, ToggleLabel.AbsolutePosition.Y + 1);
             Size = UDim2.new(0, 70, 0, 2);
             Visible = false;
@@ -1546,129 +1696,152 @@ do
             Parent = ModeSelectOuter;
         });
 
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = ModeSelectOuter;
+        });
+
         ToggleLabel:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
             ModeSelectOuter.Position = UDim2.fromOffset(ToggleLabel.AbsolutePosition.X + ToggleLabel.AbsoluteSize.X + 4, ToggleLabel.AbsolutePosition.Y + 1);
         end);
 
         local ModeSelectInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 1, -4);
-            Position = UDim2.new(0, 2, 0, 2);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 15;
             Parent = ModeSelectOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = UDim.new(0, 6);
             Parent = ModeSelectInner;
         });
 
-        Library:AddToRegistry(ModeSelectOuter, {
-            BorderColor3 = 'AccentColor';
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = ModeSelectInner;
         });
 
         Library:AddToRegistry(ModeSelectInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
 
         Library:Create('UIListLayout', {
+            Padding = UDim.new(0, 2);
             FillDirection = Enum.FillDirection.Vertical;
             SortOrder = Enum.SortOrder.LayoutOrder;
-            Padding = UDim.new(0, 2);
+            HorizontalAlignment = Enum.HorizontalAlignment.Center;
             Parent = ModeSelectInner;
         });
 
         Library:Create('UIPadding', {
-            PaddingLeft = UDim.new(0, 4),
-            PaddingRight = UDim.new(0, 4),
-            PaddingTop = UDim.new(0, 2),
-            PaddingBottom = UDim.new(0, 2),
+            PaddingTop = UDim.new(0, 4);
+            PaddingBottom = UDim.new(0, 4);
             Parent = ModeSelectInner;
         });
 
+        -- Keybinds Text
         local KeybindsToggle = {}
         do
             local KeybindsToggleContainer = Library:Create('Frame', {
                 BackgroundTransparency = 1;
-                Size = UDim2.new(1, 0, 0, 20);
+                Size = UDim2.new(1, 0, 0, 18);
                 Visible = false;
                 ZIndex = 110;
                 Parent = Library.KeybindContainer;
             });
 
             local KeybindsToggleOuter = Library:Create('Frame', {
-                BackgroundColor3 = Library.MainColor;
-                BorderColor3 = Library.AccentColor;
-                BorderSizePixel = 2,
+                BackgroundColor3 = Color3.new(0, 0, 0);
+                BorderColor3 = Color3.new(0, 0, 0);
                 Size = UDim2.new(0, 15, 0, 15);
-                Position = UDim2.new(0, 0, 0, 4);
+                Position = UDim2.new(0, 0, 0, 5);
                 Visible = true;
                 ZIndex = 110;
                 Parent = KeybindsToggleContainer;
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(1, 0);
+                CornerRadius = UDim.new(0, 4);
                 Parent = KeybindsToggleOuter;
             });
 
             Library:AddToRegistry(KeybindsToggleOuter, {
-                BorderColor3 = 'AccentColor';
+                BorderColor3 = 'Black';
             });
 
             local KeybindsToggleInner = Library:Create('Frame', {
-                BackgroundColor3 = Library.BackgroundColor;
-                BorderColor3 = Color3.new(0, 0, 0);
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -2, 1, -2);
-                Position = UDim2.new(0, 1, 0, 1);
+                BackgroundColor3 = Library.MainColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 1, 0);
                 ZIndex = 111;
                 Parent = KeybindsToggleOuter;
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(1, 0);
+                CornerRadius = UDim.new(0, 4);
+                Parent = KeybindsToggleInner;
+            });
+
+            Library:Create('UIStroke', {
+                Color = Library.OutlineColor;
+                Thickness = 1;
                 Parent = KeybindsToggleInner;
             });
 
             Library:AddToRegistry(KeybindsToggleInner, {
-                BackgroundColor3 = 'BackgroundColor';
+                BackgroundColor3 = 'MainColor';
+                BorderColor3 = 'OutlineColor';
             });
 
             local KeybindsToggleLabel = Library:CreateLabel({
                 BackgroundTransparency = 1;
                 Size = UDim2.new(0, 210, 1, 0);
-                Position = UDim2.new(1, 8, 0, 0);
+                Position = UDim2.new(1, 8, 0, -1);
                 TextSize = 13;
                 Text = "";
                 TextXAlignment = Enum.TextXAlignment.Left;
-                RichText = true;
+                RichText = true; -- Added to support color fonts
                 ZIndex = 111;
-                Parent = KeybindsToggleContainer;
+                Parent = KeybindsToggleInner;
+            });
+
+            Library:Create('UIListLayout', {
+                Padding = UDim.new(0, 4);
+                FillDirection = Enum.FillDirection.Horizontal;
+                HorizontalAlignment = Enum.HorizontalAlignment.Right;
+                SortOrder = Enum.SortOrder.LayoutOrder;
+                Parent = KeybindsToggleLabel;
             });
 
             local KeybindsToggleRegion = Library:Create('Frame', {
                 BackgroundTransparency = 1;
-                Size = UDim2.new(0, 210, 1, 0);
+                Size = UDim2.new(0, 165, 1, 0);
                 ZIndex = 113;
-                Parent = KeybindsToggleContainer;
+                Parent = KeybindsToggleOuter;
             });
 
             Library:OnHighlight(KeybindsToggleRegion, KeybindsToggleOuter,
                 { BorderColor3 = 'AccentColor' },
-                { BorderColor3 = 'AccentColor' },
+                { BorderColor3 = 'Black' },
                 function()
                     return true
                 end
             );
 
             function KeybindsToggle:Display(State)
-                KeybindsToggleInner.BackgroundColor3 = State and Library.AccentColor or Library.BackgroundColor;
+                KeybindsToggleInner.BackgroundColor3 = State and Library.AccentColor or Library.MainColor;
+                KeybindsToggleInner.BorderColor3 = State and Library.AccentColorDark or Library.OutlineColor;
                 KeybindsToggleLabel.TextColor3 = State and Library.AccentColor or Library.FontColor;
 
-                Library.RegistryMap[KeybindsToggleInner].Properties.BackgroundColor3 = State and 'AccentColor' or 'BackgroundColor';
+                Library.RegistryMap[KeybindsToggleInner].Properties.BackgroundColor3 = State and 'AccentColor' or 'MainColor';
+                Library.RegistryMap[KeybindsToggleInner].Properties.BorderColor3 = State and 'AccentColorDark' or 'OutlineColor';
                 Library.RegistryMap[KeybindsToggleLabel].Properties.TextColor3 = State and 'AccentColor' or 'FontColor';
             end;
 
@@ -1682,12 +1855,19 @@ do
 
             function KeybindsToggle:SetNormal(bool)
                 KeybindsToggle.Normal = bool
+
+                KeybindsToggleOuter.BackgroundTransparency = if KeybindsToggle.Normal then 1 else 0;
+
+                KeybindsToggleInner.BackgroundTransparency = if KeybindsToggle.Normal then 1 else 0;
+                KeybindsToggleInner.BorderSizePixel = if KeybindsToggle.Normal then 0 else 1;
+
+                KeybindsToggleLabel.Position = if KeybindsToggle.Normal then UDim2.new(1, -13, 0, -1) else UDim2.new(1, 8, 0, -1);
             end
 
             Library:GiveSignal(KeybindsToggleRegion.InputBegan:Connect(function(Input)
                 if KeybindsToggle.Normal then return end
                                         
-                if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) then
+                if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) or Input.UserInputType == Enum.UserInputType.Touch then
                     KeyPicker.Toggled = not KeyPicker.Toggled;
                     KeyPicker:DoClick()
                 end;
@@ -1702,15 +1882,24 @@ do
         for Idx, Mode in next, Modes do
             local ModeButton = {};
 
-            local Label = Library:CreateLabel({
+            local Label = Library:Create('TextButton', {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, -8, 0, 18),
+                Text = "",
+                ZIndex = 16,
+                Parent = ModeSelectInner,
+            });
+
+            local LabelText = Library:CreateLabel({
                 Active = false;
-                Size = UDim2.new(1, 0, 0, 18);
+                Size = UDim2.new(1, 0, 1, 0);
                 TextSize = 13;
                 Text = Mode;
-                RichText = true;
+                RichText = true; -- Added to support color fonts
                 ZIndex = 16;
-                Parent = ModeSelectInner;
+                Parent = Label;
             });
+            ModeSelectOuter.Size = ModeSelectOuter.Size + UDim2.new(0, 0, 0, 20)
 
             function ModeButton:Select()
                 for _, Button in next, ModeButtons do
@@ -1719,8 +1908,8 @@ do
 
                 KeyPicker.Mode = Mode;
 
-                Label.TextColor3 = Library.AccentColor;
-                Library.RegistryMap[Label].Properties.TextColor3 = 'AccentColor';
+                LabelText.TextColor3 = Library.AccentColor;
+                Library.RegistryMap[LabelText].Properties.TextColor3 = 'AccentColor';
 
                 ModeSelectOuter.Visible = false;
             end;
@@ -1728,8 +1917,8 @@ do
             function ModeButton:Deselect()
                 KeyPicker.Mode = nil;
 
-                Label.TextColor3 = Library.FontColor;
-                Library.RegistryMap[Label].Properties.TextColor3 = 'FontColor';
+                LabelText.TextColor3 = Library.FontColor;
+                Library.RegistryMap[LabelText].Properties.TextColor3 = 'FontColor';
             end;
 
             Label.InputBegan:Connect(function(Input)
@@ -1767,11 +1956,24 @@ do
 
             for _, Frame in next, Library.KeybindContainer:GetChildren() do
                 if Frame:IsA('Frame') and Frame.Visible then
-                    YSize = YSize + 20;
+                    YSize = YSize + 18;
+                    local Label = Frame:FindFirstChild("TextLabel", true)
+                    if not Label then continue end
+
+                    if (Label.TextBounds.X > XSize) then
+                        XSize = Label.TextBounds.X + 20;
+                    end
                 end;
+
+                --[[if Frame:IsA('TextLabel') and Frame.Visible then
+                    YSize = YSize + 18;
+                    if (Frame.TextBounds.X > XSize) then
+                        XSize = Frame.TextBounds.X;
+                    end
+                end;--]]
             end;
 
-            Library.KeybindFrame.Size = UDim2.new(0, 230, 0, (YSize + 40) * DPIScale)
+            Library.KeybindFrame.Size = UDim2.new(0, math.max(XSize + 15, 210), 0, (YSize + 23 + 6) * DPIScale)
         end;
 
         function KeyPicker:GetState()
@@ -1964,7 +2166,7 @@ do
             DisabledValues = Info.DisabledValues or {};
             Multi = Info.Multi;
             Type = 'Dropdown';
-            SpecialType = Info.SpecialType;
+            SpecialType = Info.SpecialType; -- can be either 'Player' or 'Team'
             Visible = if typeof(Info.Visible) == "boolean" then Info.Visible else true;
             Disabled = if typeof(Info.Disabled) == "boolean" then Info.Disabled else false;
             Callback = Info.Callback or function(Value) end;
@@ -1989,13 +2191,13 @@ do
         end;
 
         local DropdownOuter = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
-            Size = UDim2.new(0, 60, 0, 20);
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(0, 60, 0, 18);
             Visible = Dropdown.Visible;
             ZIndex = 6;
             Parent = ToggleLabel;
+            Name = "drodpwon_outer";
         });
 
         Library:Create('UICorner', {
@@ -2004,55 +2206,103 @@ do
         });
 
         Library:AddToRegistry(DropdownOuter, {
-            BorderColor3 = 'AccentColor';
+            BorderColor3 = 'Black';
         });
 
         local DropdownInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -2, 1, -2);
-            Position = UDim2.new(0, 1, 0, 1);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 6;
             Parent = DropdownOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 3);
+            CornerRadius = UDim.new(0, 4);
+            Parent = DropdownInner;
+        });
+
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
             Parent = DropdownInner;
         });
 
         Library:AddToRegistry(DropdownInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
+
+        Library:Create('UIGradient', {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 230, 230))
+            });
+            Rotation = 90;
+            Parent = DropdownInner;
+        });
+
+        local DropdownInnerSearch;
+        if Info.Searchable then
+            DropdownInnerSearch = Library:Create('TextBox', {
+                BackgroundTransparency = 1;
+                Visible = false;
+
+                Position = UDim2.new(0, 5, 0, 0);
+                Size = UDim2.new(0.9, -5, 1, 0);
+
+                Font = Library.Font;
+                PlaceholderColor3 = Color3.fromRGB(180, 180, 180);
+                PlaceholderText = 'Search...';
+
+                Text = '';
+                TextColor3 = Library.FontColor;
+                TextSize = 13;
+                TextStrokeTransparency = 0;
+                TextXAlignment = Enum.TextXAlignment.Left;
+                RichText = true; -- Added to support color fonts
+
+                ClearTextOnFocus = false;
+
+                ZIndex = 7;
+                Parent = DropdownOuter;
+            });
+
+            Library:ApplyTextStroke(DropdownInnerSearch);
+
+            Library:AddToRegistry(DropdownInnerSearch, {
+                TextColor3 = 'FontColor';
+            });
+        end
 
         local DropdownArrow = Library:Create('ImageLabel', {
             AnchorPoint = Vector2.new(0, 0.5);
             BackgroundTransparency = 1;
-            Position = UDim2.new(1, -14, 0.5, 0);
-            Size = UDim2.new(0, 10, 0, 10);
+            Position = UDim2.new(1, -16, 0.5, 0);
+            Size = UDim2.new(0, 12, 0, 12);
             Image = 'http://www.roblox.com/asset/?id=6282522798';
-            ImageColor3 = Library.AccentColor;
+            ImageColor3 = Color3.new(1, 1, 1);
             ZIndex = 8;
             Parent = DropdownInner;
         });
 
         local ItemList = Library:CreateLabel({
-            Position = UDim2.new(0, 4, 0, 0);
-            Size = UDim2.new(1, -18, 1, 0);
+            Position = UDim2.new(0, 5, 0, 0);
+            Size = UDim2.new(1, -5, 1, 0);
             TextSize = 13;
             Text = '--';
             TextXAlignment = Enum.TextXAlignment.Left;
             TextWrapped = false;
             TextTruncate = Enum.TextTruncate.AtEnd;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 7;
             Parent = DropdownInner;
         });
 
         Library:OnHighlight(DropdownOuter, DropdownOuter,
             { BorderColor3 = 'AccentColor' },
-            { BorderColor3 = 'AccentColor' },
+            { BorderColor3 = 'Black' },
             function()
                 return not Dropdown.Disabled;
             end
@@ -2063,11 +2313,12 @@ do
             Tooltip.Disabled = Dropdown.Disabled;
         end
 
-        local MAX_DROPDOWN_ITEMS = if typeof(Info.MaxVisibleDropdownItems) == "number" then math.clamp(Info.MaxVisibleDropdownItems, 4, 12) else 6;
+        local MAX_DROPDOWN_ITEMS = if typeof(Info.MaxVisibleDropdownItems) == "number" then math.clamp(Info.MaxVisibleDropdownItems, 4, 16) else 8;
 
         local ListOuter = Library:Create('Frame', {
+            BackgroundColor3 = Color3.new(0, 0, 0);
             BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BorderSizePixel = 0;
             ZIndex = 20;
             Visible = false;
             Parent = ScreenGui;
@@ -2078,13 +2329,19 @@ do
             Parent = ListOuter;
         });
 
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = ListOuter;
+        });
+
         local function RecalculateListPosition()
-            ListOuter.Position = UDim2.fromOffset(DropdownOuter.AbsolutePosition.X, DropdownOuter.AbsolutePosition.Y + DropdownOuter.Size.Y.Offset + 2);
+            ListOuter.Position = UDim2.fromOffset(DropdownOuter.AbsolutePosition.X, DropdownOuter.AbsolutePosition.Y + DropdownOuter.Size.Y.Offset + 1);
         end;
 
         local function RecalculateListSize(YSize)
-            local Y = YSize or math.clamp(GetTableSize(Dropdown.Values) * (22 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (22 * DPIScale)) + 4;
-            ListOuter.Size = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X, Y)
+            local Y = YSize or math.clamp(GetTableSize(Dropdown.Values) * (20 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (20 * DPIScale)) + 1;
+            ListOuter.Size = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X + 0.5, Y)
         end;
 
         RecalculateListPosition();
@@ -2094,26 +2351,28 @@ do
         DropdownOuter:GetPropertyChangedSignal('AbsoluteSize'):Connect(RecalculateListSize);
 
         local ListInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 1, -4);
-            Position = UDim2.new(0, 2, 0, 2);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 21;
             Parent = ListOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = UDim.new(0, 6);
             Parent = ListInner;
         });
 
-        Library:AddToRegistry(ListOuter, {
-            BorderColor3 = 'AccentColor';
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = ListInner;
         });
 
         Library:AddToRegistry(ListInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
 
         local Scrolling = Library:Create('ScrollingFrame', {
@@ -2124,13 +2383,24 @@ do
             ZIndex = 21;
             Parent = ListInner;
 
-            ScrollBarThickness = 3,
+            TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+            BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+
+            ScrollBarThickness = 4,
             ScrollBarImageColor3 = Library.AccentColor,
         });
 
         Library:AddToRegistry(Scrolling, {
             ScrollBarImageColor3 = 'AccentColor'
         })
+
+        Library:Create('UIPadding', {
+            PaddingLeft = UDim.new(0, 2);
+            PaddingRight = UDim.new(0, 2);
+            PaddingTop = UDim.new(0, 2);
+            PaddingBottom = UDim.new(0, 2);
+            Parent = Scrolling;
+        });
 
         Library:Create('UIListLayout', {
             Padding = UDim.new(0, 2);
@@ -2139,16 +2409,9 @@ do
             Parent = Scrolling;
         });
 
-        Library:Create('UIPadding', {
-            PaddingLeft = UDim.new(0, 2),
-            PaddingRight = UDim.new(0, 2),
-            PaddingTop = UDim.new(0, 2),
-            PaddingBottom = UDim.new(0, 2),
-            Parent = Scrolling;
-        });
-
         function Dropdown:UpdateColors()
-            DropdownArrow.ImageColor3 = Dropdown.Disabled and Library.DisabledAccentColor or Library.AccentColor;
+            ItemList.TextColor3 = Dropdown.Disabled and Library.DisabledAccentColor or Color3.new(1, 1, 1);
+            DropdownArrow.ImageColor3 = Dropdown.Disabled and Library.DisabledAccentColor or Color3.new(1, 1, 1);
         end;
 
         function Dropdown:Display()
@@ -2177,7 +2440,7 @@ do
             end;
 
             local X = Library:GetTextBounds(ItemList.Text, Library.Font, ItemList.TextSize, Vector2.new(ToggleLabel.AbsoluteSize.X, math.huge)) + 26;
-            DropdownOuter.Size = UDim2.new(0, X, 0, 20)
+            DropdownOuter.Size = UDim2.new(0, X, 0, 18)
         end;
 
         function Dropdown:GetActiveValues()
@@ -2208,6 +2471,9 @@ do
             local Count = 0;
             for Idx, Value in next, Values do
                 local StringValue = if typeof(Value) == "Instance" then Value.Name else Value;
+                if Info.Searchable and not string.lower(StringValue):match(string.lower(DropdownInnerSearch.Text)) then
+                    continue;
+                end
 
                 local IsDisabled = table.find(DisabledValues, StringValue);
                 local Table = {};
@@ -2216,9 +2482,9 @@ do
 
                 local Button = Library:Create('TextButton', {
                     AutoButtonColor = false,
-                    BackgroundColor3 = Library.BackgroundColor;
-                    BorderColor3 = Library.AccentColor;
-                    BorderSizePixel = 1,
+                    BackgroundColor3 = Library.MainColor;
+                    BorderColor3 = Library.OutlineColor;
+                    BorderSizePixel = 0;
                     Size = UDim2.new(1, 0, 0, 22);
                     Text = '';
                     ZIndex = 23;
@@ -2230,9 +2496,16 @@ do
                     Parent = Button;
                 });
 
+                Library:Create('UIStroke', {
+                    Color = Library.OutlineColor;
+                    Thickness = 1;
+                    Transparency = 1;
+                    Parent = Button;
+                });
+
                 Library:AddToRegistry(Button, {
-                    BackgroundColor3 = 'BackgroundColor';
-                    BorderColor3 = 'AccentColor';
+                    BackgroundColor3 = 'MainColor';
+                    BorderColor3 = 'OutlineColor';
                 });
 
                 local ButtonLabel = Library:CreateLabel({
@@ -2242,14 +2515,14 @@ do
                     TextSize = 13;
                     Text = Info.FormatDisplayValue and tostring(Info.FormatDisplayValue(StringValue)) or StringValue;
                     TextXAlignment = Enum.TextXAlignment.Left;
-                    RichText = true;
+                    RichText = true; -- Added to support color fonts
                     ZIndex = 25;
                     Parent = Button;
                 });
 
                 Library:OnHighlight(Button, Button,
-                    { TextColor3 = 'AccentColor' },
-                    { TextColor3 = 'FontColor' }
+                    { BackgroundColor3 = 'AccentColor', BorderColor3 = 'AccentColorDark' },
+                    { BackgroundColor3 = 'MainColor', BorderColor3 = 'OutlineColor' }
                 );
 
                 local Selected;
@@ -2269,9 +2542,6 @@ do
 
                     ButtonLabel.TextColor3 = Selected and Library.AccentColor or (IsDisabled and Library.DisabledAccentColor or Library.FontColor);
                     Library.RegistryMap[ButtonLabel].Properties.TextColor3 = Selected and 'AccentColor' or (IsDisabled and 'DisabledAccentColor' or 'FontColor');
-                    
-                    Button.BorderColor3 = Selected and Library.AccentColor or Library.OutlineColor;
-                    Library.RegistryMap[Button].Properties.BorderColor3 = Selected and 'AccentColor' or 'OutlineColor';
                 end;
 
                 if not IsDisabled then
@@ -2320,11 +2590,14 @@ do
                 Buttons[Button] = Table;
             end;
 
-            Scrolling.CanvasSize = UDim2.fromOffset(0, (Count * (24 * DPIScale)) + 4);
+            Scrolling.CanvasSize = UDim2.fromOffset(0, (Count * (22 * DPIScale)) + 4);
+
+            -- Workaround for silly roblox bug - not sure why it happens but sometimes the dropdown list will be empty
+            -- ... and for some reason refreshing the Visible property fixes the issue??????? thanks roblox!
             Scrolling.Visible = false;
             Scrolling.Visible = true;
 
-            local Y = math.clamp(Count * (24 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (24 * DPIScale)) + 4;
+            local Y = math.clamp(Count * (22 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (22 * DPIScale)) + 6;
             RecalculateListSize(Y);
         end;
 
@@ -2399,13 +2672,37 @@ do
                 return;
             end;
 
+            if Library.IsMobile then
+                Library.CanDrag = false;
+            end;
+
+            if Info.Searchable then
+                ItemList.Visible = false;
+                DropdownInnerSearch.Text = "";
+                DropdownInnerSearch.Visible = true;
+            end
+
             ListOuter.Visible = true;
             Library.OpenedFrames[ListOuter] = true;
+            DropdownArrow.Rotation = 180;
+
+            RecalculateListSize();
         end;
 
         function Dropdown:CloseDropdown()
+            if Library.IsMobile then         
+                Library.CanDrag = true;
+            end;
+
+            if Info.Searchable then
+                DropdownInnerSearch.Text = "";
+                DropdownInnerSearch.Visible = false;
+                ItemList.Visible = true;
+            end
+
             ListOuter.Visible = false;
             Library.OpenedFrames[ListOuter] = nil;
+            DropdownArrow.Rotation = 0;
         end;
 
         function Dropdown:OnChanged(Func)
@@ -2446,6 +2743,7 @@ do
         end;
 
         function Dropdown:SetText(...)
+            -- This is an Compat dropdown for Toggles, it doesn't have an TextLabel --
             return;
         end;
 
@@ -2454,7 +2752,7 @@ do
                 return;
             end;
 
-            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) then
+            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) or Input.UserInputType == Enum.UserInputType.Touch then
                 if ListOuter.Visible then
                     Dropdown:CloseDropdown();
                 else
@@ -2463,12 +2761,18 @@ do
             end;
         end);
 
+        if Info.Searchable then
+            DropdownInnerSearch:GetPropertyChangedSignal("Text"):Connect(function()
+                Dropdown:BuildDropdownList()
+            end);
+        end;
+
         InputService.InputBegan:Connect(function(Input)
             if Dropdown.Disabled then
                 return;
             end;
 
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                 local AbsPos, AbsSize = ListOuter.AbsolutePosition, ListOuter.AbsoluteSize;
 
                 if Mouse.X < AbsPos.X or Mouse.X > AbsPos.X + AbsSize.X
@@ -2582,12 +2886,12 @@ do
         local Container = Groupbox.Container;
 
         local TextLabel = Library:CreateLabel({
-            Size = UDim2.new(1, -4, 0, 16);
+            Size = UDim2.new(1, -4, 0, 15);
             TextSize = 13;
             Text = Data.Text;
             TextWrapped = Data.DoesWrap or false,
             TextXAlignment = Enum.TextXAlignment.Left;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 5;
             Parent = Container;
         });
@@ -2597,7 +2901,7 @@ do
             TextLabel.Size = UDim2.new(1, -4, 0, Y)
         else
             Library:Create('UIListLayout', {
-                Padding = UDim.new(0, 6 * DPIScale);
+                Padding = UDim.new(0, 4 * DPIScale);
                 FillDirection = Enum.FillDirection.Horizontal;
                 HorizontalAlignment = Enum.HorizontalAlignment.Right;
                 SortOrder = Enum.SortOrder.LayoutOrder;
@@ -2627,6 +2931,7 @@ do
         Groupbox:Resize();
         
         if Data.Idx then
+            -- Options[Data.Idx] = Label;
             Labels[Data.Idx] = Label;
         else
             table.insert(Labels, Label);
@@ -2651,9 +2956,8 @@ do
 
         local function CreateBaseButton(Button)
             local Outer = Library:Create('Frame', {
-                BackgroundColor3 = Library.MainColor;
-                BorderColor3 = Library.AccentColor;
-                BorderSizePixel = 2,
+                BackgroundColor3 = Color3.new(0, 0, 0);
+                BorderColor3 = Color3.new(0, 0, 0);
                 Size = UDim2.new(1, -4, 0, 22);
                 Visible = IsVisible;
                 ZIndex = 5;
@@ -2665,17 +2969,22 @@ do
             });
 
             local Inner = Library:Create('Frame', {
-                BackgroundColor3 = Library.BackgroundColor;
-                BorderColor3 = Color3.new(0, 0, 0);
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -2, 1, -2);
-                Position = UDim2.new(0, 1, 0, 1);
+                BackgroundColor3 = Library.MainColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 1, 0);
                 ZIndex = 6;
                 Parent = Outer;
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 5);
+                CornerRadius = UDim.new(0, 6);
+                Parent = Inner;
+            });
+
+            Library:Create('UIStroke', {
+                Color = Library.OutlineColor;
+                Thickness = 1;
                 Parent = Inner;
             });
 
@@ -2683,22 +2992,32 @@ do
                 Size = UDim2.new(1, 0, 1, 0);
                 TextSize = 13;
                 Text = Button.Text;
-                RichText = true;
+                RichText = true; -- Added to support color fonts
                 ZIndex = 6;
                 Parent = Inner;
             });
 
+            Library:Create('UIGradient', {
+                Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 230, 230))
+                });
+                Rotation = 90;
+                Parent = Inner;
+            });
+
             Library:AddToRegistry(Outer, {
-                BorderColor3 = 'AccentColor';
+                BorderColor3 = 'Black';
             });
 
             Library:AddToRegistry(Inner, {
-                BackgroundColor3 = 'BackgroundColor';
+                BackgroundColor3 = 'MainColor';
+                BorderColor3 = 'OutlineColor';
             });
 
             Library:OnHighlight(Outer, Outer,
                 { BorderColor3 = 'AccentColor' },
-                { BorderColor3 = 'AccentColor' }
+                { BorderColor3 = 'Black' }
             );
 
             return Outer, Inner, Label
@@ -2728,6 +3047,8 @@ do
                 end
 
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    return true
+                elseif Input.UserInputType == Enum.UserInputType.Touch then
                     return true
                 else
                     return false
@@ -2783,7 +3104,7 @@ do
 
             assert(typeof(SubButton.Func) == 'function', 'AddButton: `Func` callback is missing.');
 
-            self.Outer.Size = UDim2.new(0.5, -2, 0, 22)
+            self.Outer.Size = UDim2.new(0.5, -2, 0, 22 * DPIScale)
 
             SubButton.Outer, SubButton.Inner, SubButton.Label = CreateBaseButton(SubButton)
 
@@ -2792,7 +3113,7 @@ do
             SubButton.Outer.Parent = self.Outer
 
             function SubButton:UpdateColors()
-                SubButton.Label.TextColor3 = SubButton.Disabled and Library.DisabledAccentColor or Library.FontColor;
+                SubButton.Label.TextColor3 = SubButton.Disabled and Library.DisabledAccentColor or Color3.new(1, 1, 1);
             end;
 
             function SubButton:AddToolTip(tooltip, disabledTooltip)
@@ -2838,7 +3159,7 @@ do
         end
 
         function Button:UpdateColors()
-            Button.Label.TextColor3 = Button.Disabled and Library.DisabledAccentColor or Library.FontColor;
+            Button.Label.TextColor3 = Button.Disabled and Library.DisabledAccentColor or Color3.new(1, 1, 1);
         end;
 
         function Button:AddToolTip(tooltip, disabledTooltip)
@@ -2886,7 +3207,7 @@ do
         end;
 
         task.delay(0.1, Button.UpdateColors, Button);
-        Blank = Groupbox:AddBlank(6, IsVisible);
+        Blank = Groupbox:AddBlank(5, IsVisible);
         Groupbox:Resize();
 
         table.insert(Buttons, Button);
@@ -2901,27 +3222,50 @@ do
             Type = 'Divider',
         }
 
-        Groupbox:AddBlank(4);
+        Groupbox:AddBlank(2);
         local DividerOuter = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 1,
-            Size = UDim2.new(1, -4, 0, 4);
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(1, -4, 0, 5);
             ZIndex = 5;
             Parent = Container;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(1, 0);
+            CornerRadius = UDim.new(0, 4);
             Parent = DividerOuter;
         });
 
-        Library:AddToRegistry(DividerOuter, {
-            BackgroundColor3 = 'MainColor';
-            BorderColor3 = 'AccentColor';
+        local DividerInner = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
+            ZIndex = 6;
+            Parent = DividerOuter;
         });
 
-        Groupbox:AddBlank(8);
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 4);
+            Parent = DividerInner;
+        });
+
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = DividerInner;
+        });
+
+        Library:AddToRegistry(DividerOuter, {
+            BorderColor3 = 'Black';
+        });
+
+        Library:AddToRegistry(DividerInner, {
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
+        });
+
+        Groupbox:AddBlank(9);
         Groupbox:Resize();
     end
 
@@ -2936,7 +3280,7 @@ do
             Finished = Info.Finished or false;
             Visible = if typeof(Info.Visible) == "boolean" then Info.Visible else true;
             Disabled = if typeof(Info.Disabled) == "boolean" then Info.Disabled else false;
-            AllowEmpty = if typeof(Info.AllowEmpty) == "boolean" then Info.AllowEmpty else true;
+        AllowEmpty = if typeof(Info.AllowEmpty) == "boolean" then Info.AllowEmpty else true;
             EmptyReset = if typeof(Info.EmptyReset) == "string" then Info.EmptyReset else "---";
             Type = 'Input';
 
@@ -2948,21 +3292,20 @@ do
         local Blank;
 
         local InputLabel = Library:CreateLabel({
-            Size = UDim2.new(1, 0, 0, 16);
+            Size = UDim2.new(1, 0, 0, 15);
             TextSize = 13;
             Text = Info.Text;
             TextXAlignment = Enum.TextXAlignment.Left;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 5;
             Parent = Container;
         });
 
-        Groupbox:AddBlank(2);
+        Groupbox:AddBlank(1);
 
         local TextBoxOuter = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
             Size = UDim2.new(1, -4, 0, 22);
             ZIndex = 5;
             Parent = Container;
@@ -2974,31 +3317,33 @@ do
         });
 
         local TextBoxInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -2, 1, -2);
-            Position = UDim2.new(0, 1, 0, 1);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 6;
             Parent = TextBoxOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = UDim.new(0, 6);
             Parent = TextBoxInner;
         });
 
-        Library:AddToRegistry(TextBoxOuter, {
-            BorderColor3 = 'AccentColor';
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = TextBoxInner;
         });
 
         Library:AddToRegistry(TextBoxInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
 
         Library:OnHighlight(TextBoxOuter, TextBoxOuter,
             { BorderColor3 = 'AccentColor' },
-            { BorderColor3 = 'AccentColor' }
+            { BorderColor3 = 'Black' }
         );
 
         local TooltipTable;
@@ -3007,12 +3352,21 @@ do
             TooltipTable.Disabled = Textbox.Disabled;
         end
 
+        Library:Create('UIGradient', {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 230, 230))
+            });
+            Rotation = 90;
+            Parent = TextBoxInner;
+        });
+
         local Container = Library:Create('Frame', {
             BackgroundTransparency = 1;
             ClipsDescendants = true;
 
-            Position = UDim2.new(0, 4, 0, 0);
-            Size = UDim2.new(1, -4, 1, 0);
+            Position = UDim2.new(0, 5, 0, 0);
+            Size = UDim2.new(1, -5, 1, 0);
 
             ZIndex = 7;
             Parent = TextBoxInner;
@@ -3025,15 +3379,15 @@ do
             Size = UDim2.fromScale(5, 1),
 
             Font = Library.Font;
-            PlaceholderColor3 = Color3.fromRGB(150, 150, 150);
+            PlaceholderColor3 = Color3.fromRGB(180, 180, 180);
             PlaceholderText = Info.Placeholder or '';
 
             Text = Info.Default or (if Textbox.AllowEmpty == false then Textbox.EmptyReset else "---");
             TextColor3 = Library.FontColor;
             TextSize = 13;
-            TextStrokeTransparency = 1;
+            TextStrokeTransparency = 0;
             TextXAlignment = Enum.TextXAlignment.Left;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
 
             TextEditable = not Textbox.Disabled;
             ClearTextOnFocus = not Textbox.Disabled and Info.ClearTextOnFocus;
@@ -3041,6 +3395,8 @@ do
             ZIndex = 7;
             Parent = Container;
         });
+
+        Library:ApplyTextStroke(Box);
 
         Library:AddToRegistry(Box, {
             TextColor3 = 'FontColor';
@@ -3058,6 +3414,7 @@ do
 
         function Textbox:UpdateColors()
             Box.TextColor3 = Textbox.Disabled and Library.DisabledAccentColor or Library.FontColor;
+
             Library.RegistryMap[Box].Properties.TextColor3 = Textbox.Disabled and 'DisabledAccentColor' or 'FontColor';
         end;
 
@@ -3070,9 +3427,9 @@ do
         end;
 
         function Textbox:SetValue(Text)
-            if not Textbox.AllowEmpty and Trim(Text) == "" then
-                Text = Textbox.EmptyReset;
-            end
+        if not Textbox.AllowEmpty and Trim(Text) == "" then
+        Text = Textbox.EmptyReset;
+        end
 
             if Info.MaxLength and #Text > Info.MaxLength then
                 Text = Text:sub(1, Info.MaxLength);
@@ -3126,20 +3483,28 @@ do
             end);
         end
 
+        -- https://devforum.roblox.com/t/how-to-make-textboxes-follow-current-cursor-position/1368429/6
+        -- thank you nicemike40 :)
+
         local function Update()
             local PADDING = 2
             local reveal = Container.AbsoluteSize.X
 
             if not Box:IsFocused() or Box.TextBounds.X <= reveal - 2 * PADDING then
+                -- we aren't focused, or we fit so be normal
                 Box.Position = UDim2.new(0, PADDING, 0, 0)
             else
+                -- we are focused and don't fit, so adjust position
                 local cursor = Box.CursorPosition
                 if cursor ~= -1 then
+                    -- calculate pixel width of text from start to cursor
                     local subtext = string.sub(Box.Text, 1, cursor-1)
                     local width = TextService:GetTextSize(subtext, Box.TextSize, Box.Font, Vector2.new(math.huge, math.huge)).X
 
+                    -- check if we're inside the box with the cursor
                     local currentCursorPos = Box.Position.X.Offset + width
 
+                    -- adjust if necessary
                     if currentCursorPos < PADDING then
                         Box.Position = UDim2.fromOffset(PADDING-width, 0)
                     elseif currentCursorPos > reveal - PADDING - 1 then
@@ -3156,7 +3521,7 @@ do
         Box.FocusLost:Connect(Update)
         Box.Focused:Connect(Update)
 
-        Blank = Groupbox:AddBlank(6, Textbox.Visible);
+        Blank = Groupbox:AddBlank(5, Textbox.Visible);
         task.delay(0.1, Textbox.UpdateColors, Textbox);
         Textbox:Display();
         Groupbox:Resize();
@@ -3187,41 +3552,46 @@ do
         local Container = Groupbox.Container;
 
         local ToggleOuter = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
-            Size = UDim2.new(0, 16, 0, 16);
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(0, 15, 0, 15);
             Visible = Toggle.Visible;
             ZIndex = 5;
             Parent = Container;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(1, 0);
+            CornerRadius = UDim.new(0, 4);
             Parent = ToggleOuter;
         });
 
         Library:AddToRegistry(ToggleOuter, {
-            BorderColor3 = 'AccentColor';
+            BorderColor3 = 'Black';
         });
 
         local ToggleInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -2, 1, -2);
-            Position = UDim2.new(0, 1, 0, 1);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 6;
             Parent = ToggleOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(1, 0);
+            CornerRadius = UDim.new(0, 4);
+            Parent = ToggleInner;
+        });
+
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
             Parent = ToggleInner;
         });
 
         Library:AddToRegistry(ToggleInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
 
         local ToggleLabel = Library:CreateLabel({
@@ -3230,13 +3600,13 @@ do
             TextSize = 13;
             Text = Info.Text;
             TextXAlignment = Enum.TextXAlignment.Left;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 6;
-            Parent = ToggleOuter;
+            Parent = ToggleInner;
         });
 
         Library:Create('UIListLayout', {
-            Padding = UDim.new(0, 6);
+            Padding = UDim.new(0, 4);
             FillDirection = Enum.FillDirection.Horizontal;
             HorizontalAlignment = Enum.HorizontalAlignment.Right;
             SortOrder = Enum.SortOrder.LayoutOrder;
@@ -3245,14 +3615,14 @@ do
 
         local ToggleRegion = Library:Create('Frame', {
             BackgroundTransparency = 1;
-            Size = UDim2.new(0, 210, 1, 0);
+            Size = UDim2.new(0, 165, 1, 0);
             ZIndex = 8;
             Parent = ToggleOuter;
         });
 
         Library:OnHighlight(ToggleRegion, ToggleOuter,
             { BorderColor3 = 'AccentColor' },
-            { BorderColor3 = 'AccentColor' },
+            { BorderColor3 = 'Black' },
             function()
                 if Toggle.Disabled then
                     return false;
@@ -3277,16 +3647,26 @@ do
         function Toggle:Display()
             if Toggle.Disabled then
                 ToggleLabel.TextColor3 = Library.DisabledTextColor;
-                ToggleInner.BackgroundColor3 = Toggle.Value and Library.DisabledAccentColor or Library.BackgroundColor;
-                Library.RegistryMap[ToggleInner].Properties.BackgroundColor3 = Toggle.Value and 'DisabledAccentColor' or 'BackgroundColor';
+
+                ToggleInner.BackgroundColor3 = Toggle.Value and Library.DisabledAccentColor or Library.MainColor;
+                ToggleInner.BorderColor3 = Library.DisabledOutlineColor;
+
+                Library.RegistryMap[ToggleInner].Properties.BackgroundColor3 = Toggle.Value and 'DisabledAccentColor' or 'MainColor';
+                Library.RegistryMap[ToggleInner].Properties.BorderColor3 = 'DisabledOutlineColor';
                 Library.RegistryMap[ToggleLabel].Properties.TextColor3 = 'DisabledTextColor';
+
                 return;
             end;
 
             ToggleLabel.TextColor3 = Toggle.Risky and Library.RiskColor or Library.FontColor;
-            ToggleInner.BackgroundColor3 = Toggle.Value and Library.AccentColor or Library.BackgroundColor;
-            Library.RegistryMap[ToggleInner].Properties.BackgroundColor3 = Toggle.Value and 'AccentColor' or 'BackgroundColor';
-            Library.RegistryMap[ToggleLabel].Properties.TextColor3 = Toggle.Risky and 'RiskColor' or nil;
+
+            ToggleInner.BackgroundColor3 = Toggle.Value and Library.AccentColor or Library.MainColor;
+            ToggleInner.BorderColor3 = Toggle.Value and Library.AccentColorDark or Library.OutlineColor;
+
+            Library.RegistryMap[ToggleInner].Properties.BackgroundColor3 = Toggle.Value and 'AccentColor' or 'MainColor';
+            Library.RegistryMap[ToggleInner].Properties.BorderColor3 = Toggle.Value and 'AccentColorDark' or 'OutlineColor';
+
+            Library.RegistryMap[ToggleLabel].Properties.TextColor3 = Toggle.Risky and 'RiskColor' or 'FontColor';
         end;
 
         function Toggle:OnChanged(Func)
@@ -3355,24 +3735,25 @@ do
                 return;
             end;
 
-            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) then
+            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) or Input.UserInputType == Enum.UserInputType.Touch then
                 for _, Addon in next, Toggle.Addons do
                     if Library:MouseIsOverFrame(Addon.DisplayFrame) then return end
                 end
 
-                Toggle:SetValue(not Toggle.Value)
+                Toggle:SetValue(not Toggle.Value) -- Why was it not like this from the start?
                 Library:AttemptSave();
             end;
         end);
 
         if Toggle.Risky == true then
             Library:RemoveFromRegistry(ToggleLabel)
+
             ToggleLabel.TextColor3 = Library.RiskColor
             Library:AddToRegistry(ToggleLabel, { TextColor3 = 'RiskColor' })
         end
 
         Toggle:Display();
-        Blank = Groupbox:AddBlank(Info.BlankSize or 6, Toggle.Visible);
+        Blank = Groupbox:AddBlank(Info.BlankSize or 5 + 2, Toggle.Visible);
         Groupbox:Resize();
 
         Toggle.TextLabel = ToggleLabel;
@@ -3418,57 +3799,96 @@ do
 
         if not Info.Compact then
             SliderText = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 14);
+                Size = UDim2.new(1, 0, 0, 12);
                 TextSize = 13;
                 Text = Info.Text;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 TextYAlignment = Enum.TextYAlignment.Bottom;
                 Visible = Slider.Visible;
-                RichText = true;
+                RichText = true; -- Added to support color fonts
                 ZIndex = 5;
                 Parent = Container;
             });
 
-            table.insert(Blanks, Groupbox:AddBlank(2, Slider.Visible));
+            table.insert(Blanks, Groupbox:AddBlank(3, Slider.Visible));
         end
 
         local SliderOuter = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
-            Size = UDim2.new(1, -4, 0, 16);
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(1, -4, 0, 15);
             Visible = Slider.Visible;
             ZIndex = 5;
             Parent = Container;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(1, 0);
+            CornerRadius = UDim.new(0, 8);
             Parent = SliderOuter;
         });
 
         SliderOuter:GetPropertyChangedSignal('AbsoluteSize'):Connect(function()
-            Slider.MaxSize = SliderOuter.AbsoluteSize.X - 4;
+            Slider.MaxSize = SliderOuter.AbsoluteSize.X - 2;
         end);
 
         Library:AddToRegistry(SliderOuter, {
-            BorderColor3 = 'AccentColor';
+            BorderColor3 = 'Black';
         });
 
-        local Fill = Library:Create('Frame', {
-            BackgroundColor3 = Library.AccentColor;
-            BorderSizePixel = 0,
-            Size = UDim2.new(0, 0, 1, 0);
-            ZIndex = 7;
+        local SliderInner = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
+            ZIndex = 6;
             Parent = SliderOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(1, 0);
+            CornerRadius = UDim.new(0, 8);
+            Parent = SliderInner;
+        });
+
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = SliderInner;
+        });
+
+        Library:AddToRegistry(SliderInner, {
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
+        });
+
+        local Fill = Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor;
+            BorderColor3 = Library.AccentColorDark;
+            BorderSizePixel = 0;
+            Size = UDim2.new(0, 0, 1, 0);
+            ZIndex = 7;
+            Parent = SliderInner;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 8);
             Parent = Fill;
         });
 
         Library:AddToRegistry(Fill, {
+            BackgroundColor3 = 'AccentColor';
+            BorderColor3 = 'AccentColorDark';
+        });
+
+        local HideBorderRight = Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Position = UDim2.new(1, -1, 0, 0);
+            Size = UDim2.new(0, 1, 1, 0);
+            ZIndex = 8;
+            Parent = Fill;
+        });
+
+        Library:AddToRegistry(HideBorderRight, {
             BackgroundColor3 = 'AccentColor';
         });
 
@@ -3476,14 +3896,14 @@ do
             Size = UDim2.new(1, 0, 1, 0);
             TextSize = 12;
             Text = 'Infinite';
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 9;
-            Parent = SliderOuter;
+            Parent = SliderInner;
         });
 
         Library:OnHighlight(SliderOuter, SliderOuter,
             { BorderColor3 = 'AccentColor' },
-            { BorderColor3 = 'AccentColor' },
+            { BorderColor3 = 'Black' },
             function()
                 return not Slider.Disabled;
             end
@@ -3499,8 +3919,16 @@ do
                 SliderText.TextColor3 = Slider.Disabled and Library.DisabledAccentColor or Library.FontColor;
             end;
             DisplayLabel.TextColor3 = Slider.Disabled and Library.DisabledAccentColor or Library.FontColor;
+
+            HideBorderRight.BackgroundColor3 = Slider.Disabled and Library.DisabledAccentColor or Library.AccentColor;
+
             Fill.BackgroundColor3 = Slider.Disabled and Library.DisabledAccentColor or Library.AccentColor;
+            Fill.BorderColor3 = Slider.Disabled and Library.DisabledOutlineColor or Library.AccentColorDark;
+
+            Library.RegistryMap[HideBorderRight].Properties.BackgroundColor3 = Slider.Disabled and 'DisabledAccentColor' or 'AccentColor';
+
             Library.RegistryMap[Fill].Properties.BackgroundColor3 = Slider.Disabled and 'DisabledAccentColor' or 'AccentColor';
+            Library.RegistryMap[Fill].Properties.BorderColor3 = Slider.Disabled and 'DisabledOutlineColor' or 'AccentColorDark';
         end;
         
         function Slider:Display()
@@ -3509,11 +3937,14 @@ do
             elseif Info.HideMax then
                 DisplayLabel.Text = string.format('%s', Slider.Prefix .. Slider.Value .. Slider.Suffix);
             else
-                DisplayLabel.Text = string.format('%s / %s', Slider.Prefix .. Slider.Value .. Slider.Suffix, Slider.Prefix .. Slider.Max .. Slider.Suffix);
+                DisplayLabel.Text = string.format('%s/%s', Slider.Prefix .. Slider.Value .. Slider.Suffix, Slider.Prefix .. Slider.Max .. Slider.Suffix);
             end
 
             local X = Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, 1);
             Fill.Size = UDim2.new(X, 0, 1, 0);
+
+            -- I have no idea what this is
+            HideBorderRight.Visible = not (X == 1 or X == 0);
         end;
 
         function Slider:OnChanged(Func)
@@ -3622,12 +4053,16 @@ do
             end
         end;
 
-        SliderOuter.InputBegan:Connect(function(Input)
+        SliderInner.InputBegan:Connect(function(Input)
             if Slider.Disabled then
                 return;
             end;
 
-            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) then
+            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) or Input.UserInputType == Enum.UserInputType.Touch then
+                if Library.IsMobile then
+                    Library.CanDrag = false;
+                end;
+
                 local Sides = {};
                 if Library.Window then
                     Sides = Library.Window.Tabs[Library.ActiveTab]:GetSides();
@@ -3645,9 +4080,9 @@ do
                 local gPos = Fill.AbsoluteSize.X;
                 local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
 
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
                     local nMPos = Mouse.X;
-                    local nXOffset = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
+                    local nXOffset = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize); -- what in tarnation are these variable names
                     local nXScale = Library:MapValue(nXOffset, 0, Slider.MaxSize, 0, 1);
 
                     local nValue = Slider:GetValueFromXScale(nXScale);
@@ -3664,6 +4099,10 @@ do
                     RenderStepped:Wait();
                 end;
 
+                if Library.IsMobile then
+                    Library.CanDrag = true;
+                end;
+                
                 for _, Side in pairs(Sides) do
                     if typeof(Side) == "Instance" then
                         if Side:IsA("ScrollingFrame") then
@@ -3715,7 +4154,7 @@ do
             DisabledValues = Info.DisabledValues or {};
             Multi = Info.Multi;
             Type = 'Dropdown';
-            SpecialType = Info.SpecialType;
+            SpecialType = Info.SpecialType; -- can be either 'Player' or 'Team'
             Visible = if typeof(Info.Visible) == "boolean" then Info.Visible else true;
             Disabled = if typeof(Info.Disabled) == "boolean" then Info.Disabled else false;
             Callback = Info.Callback or function(Value) end;
@@ -3736,18 +4175,18 @@ do
 
         if not Info.Compact then
             DropdownLabel = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 14);
+                Size = UDim2.new(1, 0, 0, 12);
                 TextSize = 13;
                 Text = Info.Text;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 TextYAlignment = Enum.TextYAlignment.Bottom;
                 Visible = Dropdown.Visible;
-                RichText = true;
+                RichText = true; -- Added to support color fonts
                 ZIndex = 5;
                 Parent = Container;
             });
 
-            CompactBlank = Groupbox:AddBlank(2, Dropdown.Visible);
+            CompactBlank = Groupbox:AddBlank(3, Dropdown.Visible);
         end
 
         for _, Element in next, Container:GetChildren() do
@@ -3757,9 +4196,8 @@ do
         end;
 
         local DropdownOuter = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
             Size = UDim2.new(1, -4, 0, 22);
             Visible = Dropdown.Visible;
             ZIndex = 5;
@@ -3772,55 +4210,103 @@ do
         });
 
         Library:AddToRegistry(DropdownOuter, {
-            BorderColor3 = 'AccentColor';
+            BorderColor3 = 'Black';
         });
 
         local DropdownInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -2, 1, -2);
-            Position = UDim2.new(0, 1, 0, 1);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 6;
             Parent = DropdownOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = UDim.new(0, 6);
+            Parent = DropdownInner;
+        });
+
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
             Parent = DropdownInner;
         });
 
         Library:AddToRegistry(DropdownInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
+
+        Library:Create('UIGradient', {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 230, 230))
+            });
+            Rotation = 90;
+            Parent = DropdownInner;
+        });
+
+        local DropdownInnerSearch;
+        if Info.Searchable then
+            DropdownInnerSearch = Library:Create('TextBox', {
+                BackgroundTransparency = 1;
+                Visible = false;
+
+                Position = UDim2.new(0, 5, 0, 0);
+                Size = UDim2.new(0.9, -5, 1, 0);
+
+                Font = Library.Font;
+                PlaceholderColor3 = Color3.fromRGB(180, 180, 180);
+                PlaceholderText = 'Search...';
+
+                Text = '';
+                TextColor3 = Library.FontColor;
+                TextSize = 13;
+                TextStrokeTransparency = 0;
+                TextXAlignment = Enum.TextXAlignment.Left;
+                RichText = true; -- Added to support color fonts
+
+                ClearTextOnFocus = false;
+
+                ZIndex = 7;
+                Parent = DropdownOuter;
+            });
+
+            Library:ApplyTextStroke(DropdownInnerSearch);
+
+            Library:AddToRegistry(DropdownInnerSearch, {
+                TextColor3 = 'FontColor';
+            });
+        end
 
         local DropdownArrow = Library:Create('ImageLabel', {
             AnchorPoint = Vector2.new(0, 0.5);
             BackgroundTransparency = 1;
-            Position = UDim2.new(1, -14, 0.5, 0);
-            Size = UDim2.new(0, 10, 0, 10);
+            Position = UDim2.new(1, -18, 0.5, 0);
+            Size = UDim2.new(0, 12, 0, 12);
             Image = 'http://www.roblox.com/asset/?id=6282522798';
-            ImageColor3 = Library.AccentColor;
+            ImageColor3 = Color3.new(1, 1, 1);
             ZIndex = 8;
             Parent = DropdownInner;
         });
 
         local ItemList = Library:CreateLabel({
-            Position = UDim2.new(0, 4, 0, 0);
-            Size = UDim2.new(1, -18, 1, 0);
+            Position = UDim2.new(0, 5, 0, 0);
+            Size = UDim2.new(1, -20, 1, 0);
             TextSize = 13;
             Text = '--';
             TextXAlignment = Enum.TextXAlignment.Left;
             TextWrapped = false;
             TextTruncate = Enum.TextTruncate.AtEnd;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 7;
             Parent = DropdownInner;
         });
 
         Library:OnHighlight(DropdownOuter, DropdownOuter,
             { BorderColor3 = 'AccentColor' },
-            { BorderColor3 = 'AccentColor' },
+            { BorderColor3 = 'Black' },
             function()
                 return not Dropdown.Disabled;
             end
@@ -3831,11 +4317,12 @@ do
             Tooltip.Disabled = Dropdown.Disabled;
         end
 
-        local MAX_DROPDOWN_ITEMS = if typeof(Info.MaxVisibleDropdownItems) == "number" then math.clamp(Info.MaxVisibleDropdownItems, 4, 12) else 6;
+        local MAX_DROPDOWN_ITEMS = if typeof(Info.MaxVisibleDropdownItems) == "number" then math.clamp(Info.MaxVisibleDropdownItems, 4, 16) else 8;
 
         local ListOuter = Library:Create('Frame', {
+            BackgroundColor3 = Color3.new(0, 0, 0);
             BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BorderSizePixel = 0;
             ZIndex = 20;
             Visible = false;
             Parent = ScreenGui;
@@ -3846,13 +4333,19 @@ do
             Parent = ListOuter;
         });
 
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = ListOuter;
+        });
+
         local function RecalculateListPosition()
-            ListOuter.Position = UDim2.fromOffset(DropdownOuter.AbsolutePosition.X, DropdownOuter.AbsolutePosition.Y + DropdownOuter.Size.Y.Offset + 2);
+            ListOuter.Position = UDim2.fromOffset(DropdownOuter.AbsolutePosition.X, DropdownOuter.AbsolutePosition.Y + DropdownOuter.Size.Y.Offset + 1);
         end;
 
         local function RecalculateListSize(YSize)
-            local Y = YSize or math.clamp(GetTableSize(Dropdown.Values) * (22 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (22 * DPIScale)) + 4;
-            ListOuter.Size = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X, Y)
+            local Y = YSize or math.clamp(GetTableSize(Dropdown.Values) * (22 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (22 * DPIScale)) + 1;
+            ListOuter.Size = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X + 0.5, Y)
         end;
 
         RecalculateListPosition();
@@ -3861,26 +4354,28 @@ do
         DropdownOuter:GetPropertyChangedSignal('AbsolutePosition'):Connect(RecalculateListPosition);
 
         local ListInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 1, -4);
-            Position = UDim2.new(0, 2, 0, 2);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 21;
             Parent = ListOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = UDim.new(0, 6);
             Parent = ListInner;
         });
 
-        Library:AddToRegistry(ListOuter, {
-            BorderColor3 = 'AccentColor';
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = ListInner;
         });
 
         Library:AddToRegistry(ListInner, {
-            BackgroundColor3 = 'BackgroundColor';
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
         });
 
         local Scrolling = Library:Create('ScrollingFrame', {
@@ -3891,13 +4386,24 @@ do
             ZIndex = 21;
             Parent = ListInner;
 
-            ScrollBarThickness = 3,
+            TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+            BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+
+            ScrollBarThickness = 4,
             ScrollBarImageColor3 = Library.AccentColor,
         });
 
         Library:AddToRegistry(Scrolling, {
             ScrollBarImageColor3 = 'AccentColor'
         })
+
+        Library:Create('UIPadding', {
+            PaddingLeft = UDim.new(0, 2);
+            PaddingRight = UDim.new(0, 2);
+            PaddingTop = UDim.new(0, 2);
+            PaddingBottom = UDim.new(0, 2);
+            Parent = Scrolling;
+        });
 
         Library:Create('UIListLayout', {
             Padding = UDim.new(0, 2);
@@ -3906,19 +4412,13 @@ do
             Parent = Scrolling;
         });
 
-        Library:Create('UIPadding', {
-            PaddingLeft = UDim.new(0, 2),
-            PaddingRight = UDim.new(0, 2),
-            PaddingTop = UDim.new(0, 2),
-            PaddingBottom = UDim.new(0, 2),
-            Parent = Scrolling;
-        });
-
         function Dropdown:UpdateColors()
             if DropdownLabel then
                 DropdownLabel.TextColor3 = Dropdown.Disabled and Library.DisabledAccentColor or Library.FontColor;
             end;
-            DropdownArrow.ImageColor3 = Dropdown.Disabled and Library.DisabledAccentColor or Library.AccentColor;
+
+            ItemList.TextColor3 = Dropdown.Disabled and Library.DisabledAccentColor or Library.FontColor;
+            DropdownArrow.ImageColor3 = Dropdown.Disabled and Library.DisabledAccentColor or Library.FontColor;
         end;
 
         function Dropdown:Display()
@@ -3975,6 +4475,9 @@ do
             local Count = 0;
             for Idx, Value in next, Values do
                 local StringValue = if typeof(Value) == "Instance" then Value.Name else Value;
+                if Info.Searchable and not string.lower(StringValue):match(string.lower(DropdownInnerSearch.Text)) then
+                    continue;
+                end
 
                 local IsDisabled = table.find(DisabledValues, StringValue);
                 local Table = {};
@@ -3983,9 +4486,9 @@ do
 
                 local Button = Library:Create('TextButton', {
                     AutoButtonColor = false,
-                    BackgroundColor3 = Library.BackgroundColor;
-                    BorderColor3 = Library.AccentColor;
-                    BorderSizePixel = 1,
+                    BackgroundColor3 = Library.MainColor;
+                    BorderColor3 = Library.OutlineColor;
+                    BorderSizePixel = 0;
                     Size = UDim2.new(1, 0, 0, 22);
                     Text = '';
                     ZIndex = 23;
@@ -3997,9 +4500,16 @@ do
                     Parent = Button;
                 });
 
+                Library:Create('UIStroke', {
+                    Color = Library.OutlineColor;
+                    Thickness = 1;
+                    Transparency = 1;
+                    Parent = Button;
+                });
+
                 Library:AddToRegistry(Button, {
-                    BackgroundColor3 = 'BackgroundColor';
-                    BorderColor3 = 'AccentColor';
+                    BackgroundColor3 = 'MainColor';
+                    BorderColor3 = 'OutlineColor';
                 });
 
                 local ButtonLabel = Library:CreateLabel({
@@ -4009,14 +4519,14 @@ do
                     TextSize = 13;
                     Text = Info.FormatDisplayValue and tostring(Info.FormatDisplayValue(StringValue)) or StringValue;
                     TextXAlignment = Enum.TextXAlignment.Left;
-                    RichText = true;
+                    RichText = true; -- Added to support color fonts
                     ZIndex = 25;
                     Parent = Button;
                 });
 
                 Library:OnHighlight(Button, Button,
-                    { TextColor3 = 'AccentColor' },
-                    { TextColor3 = 'FontColor' }
+                    { BackgroundColor3 = 'AccentColor', BorderColor3 = 'AccentColorDark' },
+                    { BackgroundColor3 = 'MainColor', BorderColor3 = 'OutlineColor' }
                 );
 
                 local Selected;
@@ -4036,9 +4546,6 @@ do
 
                     ButtonLabel.TextColor3 = Selected and Library.AccentColor or (IsDisabled and Library.DisabledAccentColor or Library.FontColor);
                     Library.RegistryMap[ButtonLabel].Properties.TextColor3 = Selected and 'AccentColor' or (IsDisabled and 'DisabledAccentColor' or 'FontColor');
-
-                    Button.BorderColor3 = Selected and Library.AccentColor or Library.OutlineColor;
-                    Library.RegistryMap[Button].Properties.BorderColor3 = Selected and 'AccentColor' or 'OutlineColor';
                 end;
 
                 if not IsDisabled then
@@ -4071,7 +4578,7 @@ do
 
                             Table:UpdateButton();
                             Dropdown:Display();
-
+                            
                             Library:UpdateDependencyBoxes();
                             Library:SafeCallback(Dropdown.Callback, Dropdown.Value);
                             Library:SafeCallback(Dropdown.Changed, Dropdown.Value);
@@ -4087,11 +4594,14 @@ do
                 Buttons[Button] = Table;
             end;
 
-            Scrolling.CanvasSize = UDim2.fromOffset(0, (Count * (24 * DPIScale)) + 4);
+            Scrolling.CanvasSize = UDim2.fromOffset(0, (Count * (22 * DPIScale)) + 4);
+
+            -- Workaround for silly roblox bug - not sure why it happens but sometimes the dropdown list will be empty
+            -- ... and for some reason refreshing the Visible property fixes the issue??????? thanks roblox!
             Scrolling.Visible = false;
             Scrolling.Visible = true;
 
-            local Y = math.clamp(Count * (24 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (24 * DPIScale)) + 4;
+            local Y = math.clamp(Count * (22 * DPIScale), 0, MAX_DROPDOWN_ITEMS * (22 * DPIScale)) + 6;
             RecalculateListSize(Y);
         end;
 
@@ -4169,13 +4679,37 @@ do
                 return;
             end;
 
+            if Library.IsMobile then
+                Library.CanDrag = false;
+            end;
+
+            if Info.Searchable then
+                ItemList.Visible = false;
+                DropdownInnerSearch.Text = "";
+                DropdownInnerSearch.Visible = true;
+            end
+
             ListOuter.Visible = true;
             Library.OpenedFrames[ListOuter] = true;
+            DropdownArrow.Rotation = 180;
+
+            RecalculateListSize();
         end;
 
         function Dropdown:CloseDropdown()
+            if Library.IsMobile then            
+                Library.CanDrag = true;
+            end;
+
+            if Info.Searchable then
+                DropdownInnerSearch.Text = "";
+                DropdownInnerSearch.Visible = false;
+                ItemList.Visible = true;
+            end
+
             ListOuter.Visible = false;
             Library.OpenedFrames[ListOuter] = nil;
+            DropdownArrow.Rotation = 0;
         end;
 
         function Dropdown:OnChanged(Func)
@@ -4230,7 +4764,7 @@ do
                 return;
             end;
 
-            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) then
+            if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) or Input.UserInputType == Enum.UserInputType.Touch then
                 if ListOuter.Visible then
                     Dropdown:CloseDropdown();
                 else
@@ -4239,16 +4773,22 @@ do
             end;
         end);
 
+        if Info.Searchable then
+            DropdownInnerSearch:GetPropertyChangedSignal("Text"):Connect(function()
+                Dropdown:BuildDropdownList()
+            end);
+        end;
+
         InputService.InputBegan:Connect(function(Input)
             if Dropdown.Disabled then
                 return;
             end;
 
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                 local AbsPos, AbsSize = ListOuter.AbsolutePosition, ListOuter.AbsoluteSize;
 
                 if Mouse.X < AbsPos.X or Mouse.X > AbsPos.X + AbsSize.X
-                    or Mouse.Y < (AbsPos.Y - (20 * DPIScale) - 1) or Mouse.Y > AbsPos.Y + AbsSize.Y then
+                    or Mouse.Y < (AbsPos.Y - (22 * DPIScale) - 1) or Mouse.Y > AbsPos.Y + AbsSize.Y then
 
                     Dropdown:CloseDropdown();
                 end;
@@ -4293,7 +4833,7 @@ do
         end
 
         task.delay(0.1, Dropdown.UpdateColors, Dropdown)
-        Blank = Groupbox:AddBlank(Info.BlankSize or 6, Dropdown.Visible);
+        Blank = Groupbox:AddBlank(Info.BlankSize or 5, Dropdown.Visible);
         Groupbox:Resize();
 
         Options[Idx] = Dropdown;
@@ -4384,7 +4924,7 @@ do
     end;
 end;
 
--- Create other UI elements
+-- < Create other UI elements >
 do
     Library.LeftNotificationArea = Library:Create('Frame', {
         BackgroundTransparency = 1;
@@ -4395,11 +4935,12 @@ do
     });
 
     Library:Create('UIListLayout', {
-        Padding = UDim.new(0, 8);
+        Padding = UDim.new(0, 6);
         FillDirection = Enum.FillDirection.Vertical;
         SortOrder = Enum.SortOrder.LayoutOrder;
         Parent = Library.LeftNotificationArea;
     });
+
 
     Library.RightNotificationArea = Library:Create('Frame', {
         AnchorPoint = Vector2.new(1, 0);
@@ -4411,18 +4952,18 @@ do
     });
 
     Library:Create('UIListLayout', {
-        Padding = UDim.new(0, 8);
+        Padding = UDim.new(0, 6);
         FillDirection = Enum.FillDirection.Vertical;
         HorizontalAlignment = Enum.HorizontalAlignment.Right;
         SortOrder = Enum.SortOrder.LayoutOrder;
         Parent = Library.RightNotificationArea;
     });
 
+
     local WatermarkOuter = Library:Create('Frame', {
-        BorderColor3 = Library.AccentColor;
-        BorderSizePixel = 2,
+        BorderColor3 = Color3.new(0, 0, 0);
         Position = UDim2.new(0, 100, 0, -25);
-        Size = UDim2.new(0, 213, 0, 24);
+        Size = UDim2.new(0, 213, 0, 22);
         ZIndex = 200;
         Visible = false;
         Parent = ScreenGui;
@@ -4434,37 +4975,69 @@ do
     });
 
     local WatermarkInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.BackgroundColor;
-        BorderColor3 = Color3.new(0, 0, 0);
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, -4, 1, -4);
-        Position = UDim2.new(0, 2, 0, 2);
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.AccentColor;
+        BorderSizePixel = 0;
+        Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 201;
         Parent = WatermarkOuter;
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = UDim.new(0, 8);
         Parent = WatermarkInner;
     });
 
-    Library:AddToRegistry(WatermarkOuter, {
-        BorderColor3 = 'AccentColor';
+    Library:Create('UIStroke', {
+        Color = Library.AccentColor;
+        Thickness = 1;
+        Parent = WatermarkInner;
     });
 
     Library:AddToRegistry(WatermarkInner, {
-        BackgroundColor3 = 'BackgroundColor';
+        BorderColor3 = 'AccentColor';
+    });
+
+    local InnerFrame = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(1, 1, 1);
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 1, 0, 1);
+        Size = UDim2.new(1, -2, 1, -2);
+        ZIndex = 202;
+        Parent = WatermarkInner;
+    });
+
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 8);
+        Parent = InnerFrame;
+    });
+
+    local Gradient = Library:Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+            ColorSequenceKeypoint.new(1, Library.MainColor),
+        });
+        Rotation = -90;
+        Parent = InnerFrame;
+    });
+
+    Library:AddToRegistry(Gradient, {
+        Color = function()
+            return ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+                ColorSequenceKeypoint.new(1, Library.MainColor),
+            });
+        end
     });
 
     local WatermarkLabel = Library:CreateLabel({
         Position = UDim2.new(0, 8, 0, 0);
-        Size = UDim2.new(1, -12, 1, 0);
+        Size = UDim2.new(1, -4, 1, 0);
         TextSize = 13;
         TextXAlignment = Enum.TextXAlignment.Left;
-        TextYAlignment = Enum.TextYAlignment.Center;
-        RichText = true;
+        RichText = true; -- Added to support color fonts
         ZIndex = 203;
-        Parent = WatermarkInner;
+        Parent = InnerFrame;
     });
 
     Library.Watermark = WatermarkOuter;
@@ -4473,10 +5046,9 @@ do
 
     local KeybindOuter = Library:Create('Frame', {
         AnchorPoint = Vector2.new(0, 0.5);
-        BorderColor3 = Library.AccentColor;
-        BorderSizePixel = 2,
-        Position = UDim2.new(0, 10, 0.5, 0);
-        Size = UDim2.new(0, 230, 0, 30);
+        BorderColor3 = Color3.new(0, 0, 0);
+        Position = UDim2.new(0, 15, 0.5, 0);
+        Size = UDim2.new(0, 230, 0, 24);
         Visible = false;
         ZIndex = 100;
         Parent = ScreenGui;
@@ -4488,40 +5060,58 @@ do
     });
 
     local KeybindInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.BackgroundColor;
-        BorderColor3 = Color3.new(0, 0, 0);
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, -4, 1, -4);
-        Position = UDim2.new(0, 2, 0, 2);
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        BorderSizePixel = 0;
+        Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 101;
         Parent = KeybindOuter;
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = UDim.new(0, 8);
         Parent = KeybindInner;
     });
 
-    Library:AddToRegistry(KeybindOuter, {
-        BorderColor3 = 'AccentColor';
-    }, true);
+    Library:Create('UIStroke', {
+        Color = Library.OutlineColor;
+        Thickness = 1;
+        Parent = KeybindInner;
+    });
 
     Library:AddToRegistry(KeybindInner, {
-        BackgroundColor3 = 'BackgroundColor';
+        BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'OutlineColor';
+    }, true);
+
+    local ColorFrame = Library:Create('Frame', {
+        BackgroundColor3 = Library.AccentColor;
+        BorderSizePixel = 0;
+        Size = UDim2.new(1, 0, 0, 2);
+        ZIndex = 102;
+        Parent = KeybindInner;
+    });
+
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 2);
+        Parent = ColorFrame;
+    });
+
+    Library:AddToRegistry(ColorFrame, {
+        BackgroundColor3 = 'AccentColor';
     }, true);
 
     local KeybindLabel = Library:CreateLabel({
         Size = UDim2.new(1, 0, 0, 24);
-        Position = UDim2.fromOffset(8, 2),
+        Position = UDim2.fromOffset(8, 0),
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextYAlignment = Enum.TextYAlignment.Center,
-        Text = 'Keybinds',
-        TextSize = 14,
-        RichText = true;
+
+        Text = 'Keybinds';
+        TextSize = 13;
+        RichText = true; -- Added to support color fonts
         ZIndex = 104;
         Parent = KeybindInner;
     });
-
     Library:MakeDraggable(KeybindOuter);
 
     local KeybindContainer = Library:Create('Frame', {
@@ -4535,13 +5125,14 @@ do
     Library:Create('UIListLayout', {
         FillDirection = Enum.FillDirection.Vertical;
         SortOrder = Enum.SortOrder.LayoutOrder;
-        Padding = UDim.new(0, 4);
         Parent = KeybindContainer;
     });
 
     Library:Create('UIPadding', {
         PaddingLeft = UDim.new(0, 8),
+        PaddingRight = UDim.new(0, 8),
         PaddingTop = UDim.new(0, 4),
+        PaddingBottom = UDim.new(0, 4),
         Parent = KeybindContainer,
     })
 
@@ -4556,7 +5147,7 @@ end;
 
 function Library:SetWatermark(Text)
     local X, Y = Library:GetTextBounds(Text, Library.Font, 13);
-    Library.Watermark.Size = UDim2.new(0, X + 20, 0, 24);
+    Library.Watermark.Size = UDim2.new(0, X + 20, 0, (Y * 1.5) + 4);
     Library:SetWatermarkVisibility(true)
 
     Library.WatermarkText.Text = Text;
@@ -4581,14 +5172,13 @@ function Library:Notify(...)
         Data.Time = select(2, ...) or 5
         Data.SoundId = select(3, ...)
     end
-
+    
     local Side = string.lower(Library.NotifySide);
     local XSize, YSize = Library:GetTextBounds(Data.Description, Library.Font, 13);
     YSize = YSize + 10
 
     local NotifyOuter = Library:Create('Frame', {
-        BorderColor3 = Library.AccentColor;
-        BorderSizePixel = 2,
+        BorderColor3 = Color3.new(0, 0, 0);
         Size = UDim2.new(0, 0, 0, YSize);
         ClipsDescendants = true;
         ZIndex = 100;
@@ -4601,46 +5191,94 @@ function Library:Notify(...)
     });
 
     local NotifyInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.BackgroundColor;
-        BorderColor3 = Color3.new(0, 0, 0);
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, -4, 1, -4);
-        Position = UDim2.new(0, 2, 0, 2);
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        BorderSizePixel = 0;
+        Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 101;
         Parent = NotifyOuter;
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = UDim.new(0, 8);
         Parent = NotifyInner;
     });
 
-    Library:AddToRegistry(NotifyOuter, {
-        BorderColor3 = 'AccentColor';
-    }, true);
+    Library:Create('UIStroke', {
+        Color = Library.OutlineColor;
+        Thickness = 1;
+        Parent = NotifyInner;
+    });
 
     Library:AddToRegistry(NotifyInner, {
-        BackgroundColor3 = 'BackgroundColor';
+        BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'OutlineColor';
     }, true);
+
+    local InnerFrame = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(1, 1, 1);
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 1, 0, 1);
+        Size = UDim2.new(1, -2, 1, -2);
+        ZIndex = 102;
+        Parent = NotifyInner;
+    });
+
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 8);
+        Parent = InnerFrame;
+    });
+
+    local Gradient = Library:Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+            ColorSequenceKeypoint.new(1, Library.MainColor),
+        });
+        Rotation = -90;
+        Parent = InnerFrame;
+    });
+
+    Library:AddToRegistry(Gradient, {
+        Color = function()
+            return ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+                ColorSequenceKeypoint.new(1, Library.MainColor),
+            });
+        end
+    });
 
     local NotifyLabel = Library:CreateLabel({
         AnchorPoint = if Side == "left" then Vector2.new(0, 0) else Vector2.new(1, 0);
-        Position = if Side == "left" then UDim2.new(0, 10, 0, 0) else UDim2.new(1, -10, 0, 0);
-        Size = UDim2.new(1, -20, 1, 0);
+        Position = if Side == "left" then UDim2.new(0, 8, 0, 0) else UDim2.new(1, -8, 0, 0);
+        Size = UDim2.new(1, -12, 1, 0);
         Text = (if Data.Title == "" then "" else "[" .. Data.Title .. "] ") .. tostring(Data.Description);
         TextXAlignment = if Side == "left" then Enum.TextXAlignment.Left else Enum.TextXAlignment.Right;
-        TextYAlignment = Enum.TextYAlignment.Center;
         TextSize = 13;
-        RichText = true;
+        RichText = true; -- Added to support color fonts
         ZIndex = 103;
+        Parent = InnerFrame;
+    });
+
+    local SideColor = Library:Create('Frame', {
+        AnchorPoint = if Side == "left" then Vector2.new(0, 0.5) else Vector2.new(1, 0.5);
+        Position = if Side == "left" then UDim2.new(0, -2, 0.5, 0) else UDim2.new(1, 2, 0.5, 0);
+        BackgroundColor3 = Library.AccentColor;
+        BorderSizePixel = 0;
+        Size = UDim2.new(0, 3, 0.8, 0);
+        ZIndex = 104;
         Parent = NotifyInner;
+    });
+
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 2);
+        Parent = SideColor;
     });
 
     function Data:Resize()
         XSize, YSize = Library:GetTextBounds(NotifyLabel.Text, Library.Font, 13);
         YSize = YSize + 10
-
-        pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize * DPIScale + 24, 0, YSize), 'Out', 'Quad', 0.4, true);
+    
+        pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize + 20 + 4, 0, YSize), 'Out', 'Quad', 0.4, true);
     end
 
     function Data:ChangeTitle(NewText)
@@ -4663,9 +5301,14 @@ function Library:Notify(...)
     end
 
     function Data:ChangeStep()
+        -- this is supposed to be empty
     end
 
     Data:Resize();
+
+    Library:AddToRegistry(SideColor, {
+        BackgroundColor3 = 'AccentColor';
+    }, true);
 
     if Data.SoundId then
         Library:Create('Sound', {
@@ -4676,7 +5319,7 @@ function Library:Notify(...)
         }):Destroy();
     end
 
-    pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize * DPIScale + 24, 0, YSize), 'Out', 'Quad', 0.4, true);
+    pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize + 20 + 4, 0, YSize), 'Out', 'Quad', 0.4, true);
 
     task.spawn(function()
         if typeof(Data.Time) == "Instance" then
@@ -4691,8 +5334,9 @@ function Library:Notify(...)
     end);
 
     return Data
-end
+end;
 
+-- MODIFIED: Changed layout to horizontal with tabs on left side
 function Library:CreateWindow(...)
     local Arguments = { ... }
     local Config = { AnchorPoint = Vector2.zero }
@@ -4705,23 +5349,23 @@ function Library:CreateWindow(...)
     end
 
     if typeof(Config.Title) ~= "string" then Config.Title = 'No title' end
-    if typeof(Config.TabPadding) ~= 'number' then Config.TabPadding = 4 end
+    if typeof(Config.TabPadding) ~= 'number' then Config.TabPadding = 1 end
     if typeof(Config.MenuFadeTime) ~= 'number' then Config.MenuFadeTime = 0.2 end
     if typeof(Config.NotifySide) ~= "string" then Library.NotifySide = 'Left' else Library.NotifySide = Config.NotifySide end
     if typeof(Config.ShowCustomCursor) ~= 'boolean' then Library.ShowCustomCursor = true else Library.ShowCustomCursor = Config.ShowCustomCursor end
 
-    if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(200, 100) end
+    if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(175, 50) end
     if typeof(Config.Size) ~= 'UDim2' then
         if Library.IsMobile then
             local ViewportSizeYOffset = tonumber(workspace.CurrentCamera.ViewportSize.Y) - 35;
             Config.Size = UDim2.fromOffset(550, math.clamp(ViewportSizeYOffset, 200, 600))
         else
-            Config.Size = UDim2.fromOffset(700, 500)
+            Config.Size = UDim2.fromOffset(800, 500) -- Made wider for horizontal layout
         end
     end
 
     if Config.TabPadding <= 0 then
-        Config.TabPadding = 4
+        Config.TabPadding = 1
     end
 
     if Config.Center then
@@ -4736,9 +5380,8 @@ function Library:CreateWindow(...)
 
     local Outer = Library:Create('Frame', {
         AnchorPoint = Config.AnchorPoint;
-        BackgroundColor3 = Color3.new(0.05, 0.05, 0.08);
-        BorderColor3 = Library.AccentColor;
-        BorderSizePixel = 2,
+        BackgroundColor3 = Color3.new(15, 15, 15);
+        BorderSizePixel = 0;
         Position = Config.Position;
         Size = Config.Size;
         Visible = false;
@@ -4751,6 +5394,13 @@ function Library:CreateWindow(...)
         Parent = Outer;
     });
 
+    Library:Create('UIStroke', {
+        Color = Library.AccentColor;
+        Thickness = 1;
+        Transparency = 0.5;
+        Parent = Outer;
+    });
+
     LibraryMainOuterFrame = Outer;
     Library:MakeDraggable(Outer, 30, true);
 
@@ -4758,56 +5408,116 @@ function Library:CreateWindow(...)
         Library:MakeResizable(Outer, Library.MinSize);
     end
 
-    local TitleBar = Library:Create('Frame', {
+    local Inner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
-        BorderColor3 = Color3.new(0, 0, 0);
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, -4, 0, 28);
-        Position = UDim2.new(0, 2, 0, 2);
+        BorderColor3 = Library.AccentColor;
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 1, 0, 1);
+        Size = UDim2.new(1, -2, 1, -2);
         ZIndex = 1;
         Parent = Outer;
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 8);
-        Parent = TitleBar;
+        CornerRadius = UDim.new(0, 12);
+        Parent = Inner;
     });
 
-    Library:AddToRegistry(TitleBar, {
+    Library:AddToRegistry(Inner, {
         BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'AccentColor';
+    });
+
+    local TopBar = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.AccentColor;
+        BorderSizePixel = 0;
+        Size = UDim2.new(1, 0, 0, 35);
+        ZIndex = 2;
+        Parent = Inner;
+    });
+
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 12);
+        Parent = TopBar;
+    });
+
+    Library:Create('UIStroke', {
+        Color = Library.AccentColor;
+        Thickness = 1;
+        Transparency = 0.3;
+        Parent = TopBar;
     });
 
     local WindowLabel = Library:CreateLabel({
         Position = UDim2.new(0, 12, 0, 0);
         Size = UDim2.new(0, 0, 1, 0);
         Text = Config.Title or '';
-        TextXAlignment = Enum.TextXAlignment.Left;
-        TextYAlignment = Enum.TextYAlignment.Center;
         TextSize = 15;
-        RichText = true;
-        ZIndex = 1;
-        Parent = TitleBar;
+        TextXAlignment = Enum.TextXAlignment.Left;
+        RichText = true; -- Added to support color fonts
+        ZIndex = 3;
+        Parent = TopBar;
     });
 
-    local MainSection = Library:Create('Frame', {
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 2, 0, 32);
-        Size = UDim2.new(1, -4, 1, -34);
+    -- MODIFIED: Main section with horizontal layout (tabs on left, content on right)
+    local MainSectionOuter = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Library.OutlineColor;
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 8, 0, 40);
+        Size = UDim2.new(1, -16, 1, -48);
         ZIndex = 1;
-        Parent = Outer;
+        Parent = Inner;
     });
 
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 10);
+        Parent = MainSectionOuter;
+    });
+
+    Library:Create('UIStroke', {
+        Color = Library.OutlineColor;
+        Thickness = 1;
+        Parent = MainSectionOuter;
+    });
+
+    Library:AddToRegistry(MainSectionOuter, {
+        BackgroundColor3 = 'BackgroundColor';
+        BorderColor3 = 'OutlineColor';
+    });
+
+    local MainSectionInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Color3.new(0, 0, 0);
+        BorderMode = Enum.BorderMode.Inset;
+        Position = UDim2.new(0, 0, 0, 0);
+        Size = UDim2.new(1, 0, 1, 0);
+        ZIndex = 1;
+        Parent = MainSectionOuter;
+    });
+
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 10);
+        Parent = MainSectionInner;
+    });
+
+    Library:AddToRegistry(MainSectionInner, {
+        BackgroundColor3 = 'BackgroundColor';
+    });
+
+    -- MODIFIED: Left side tabs area (vertical)
     local LeftTabArea = Library:Create('ScrollingFrame', {
         ScrollingDirection = Enum.ScrollingDirection.Y;
         CanvasSize = UDim2.new(0, 0, 0, 0);
         AutomaticCanvasSize = Enum.AutomaticSize.Y;
-        ScrollBarThickness = 3;
+        ScrollBarThickness = 4;
         ScrollBarImageColor3 = Library.AccentColor;
         BackgroundTransparency = 1;
-        Position = UDim2.new(0, 0, 0, 0);
-        Size = UDim2.new(0, 110, 1, 0);
+        Position = UDim2.new(0, 8, 0, 8);
+        Size = UDim2.new(0, 130, 1, -16);
         ZIndex = 1;
-        Parent = MainSection;
+        Parent = MainSectionInner;
     });
 
     Library:AddToRegistry(LeftTabArea, {
@@ -4822,32 +5532,51 @@ function Library:CreateWindow(...)
         Parent = LeftTabArea;
     });
 
-    Library:Create('UIPadding', {
-        PaddingLeft = UDim.new(0, 4),
-        PaddingRight = UDim.new(0, 4),
-        PaddingTop = UDim.new(0, 4),
-        PaddingBottom = UDim.new(0, 4),
-        Parent = LeftTabArea;
-    });
-
+    -- MODIFIED: Right side content area
     local TabContainer = Library:Create('Frame', {
-        BackgroundColor3 = Library.BackgroundColor;
-        BorderColor3 = Library.AccentColor;
-        BorderSizePixel = 2,
-        Position = UDim2.new(0, 120, 0, 0);
-        Size = UDim2.new(1, -124, 1, 0);
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 145, 0, 8);
+        Size = UDim2.new(1, -158, 1, -16);
         ZIndex = 2;
-        Parent = MainSection;
+        Parent = MainSectionInner;
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 8);
+        CornerRadius = UDim.new(0, 10);
         Parent = TabContainer;
     });
 
+    Library:Create('UIStroke', {
+        Color = Library.OutlineColor;
+        Thickness = 1;
+        Parent = TabContainer;
+    });
+    
+    local InnerVideoBackground = Library:Create('VideoFrame', {
+        BackgroundColor3 = Library.MainColor;
+        BorderMode = Enum.BorderMode.Inset;
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 1, 0, 1);
+        Size = UDim2.new(1, -2, 1, -2);
+        ZIndex = 2;
+        Visible = false;
+        Volume = 0;
+        Looped = true;
+        Parent = TabContainer;
+    });
+
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 10);
+        Parent = InnerVideoBackground;
+    });
+
+    Library.InnerVideoBackground = InnerVideoBackground;
+
     Library:AddToRegistry(TabContainer, {
-        BackgroundColor3 = 'BackgroundColor';
-        BorderColor3 = 'AccentColor';
+        BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'OutlineColor';
     });
 
     function Window:SetWindowTitle(Title)
@@ -4857,6 +5586,7 @@ function Library:CreateWindow(...)
         end
     end;
 
+    -- MODIFIED: Updated AddTab for horizontal layout
     function Window:AddTab(Name)
         local Tab = {
             Groupboxes = {};
@@ -4864,12 +5594,13 @@ function Library:CreateWindow(...)
             OriginalName = Name; Name = Name;
         };
 
-        local TabButtonHeight = 28;
-
+        -- Create vertical tab button
+        local TabButtonHeight = Library:GetTextBounds(Tab.Name, Library.Font, 14) + 12;
+        
         local TabButton = Library:Create('Frame', {
             BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
+            BorderColor3 = Library.OutlineColor;
+            BorderSizePixel = 0;
             Size = UDim2.new(1, -8, 0, TabButtonHeight);
             ZIndex = 1;
             Parent = LeftTabArea;
@@ -4880,40 +5611,164 @@ function Library:CreateWindow(...)
             Parent = TabButton;
         });
 
+        Library:Create('UIStroke', {
+            Color = Library.OutlineColor;
+            Thickness = 1;
+            Parent = TabButton;
+        });
+
         Library:AddToRegistry(TabButton, {
             BackgroundColor3 = 'BackgroundColor';
-            BorderColor3 = 'AccentColor';
+            BorderColor3 = 'OutlineColor';
         });
 
         local TabButtonLabel = Library:CreateLabel({
-            Position = UDim2.new(0, 6, 0, 0);
-            Size = UDim2.new(1, -12, 1, 0);
+            Position = UDim2.new(0, 6, 0, 2);
+            Size = UDim2.new(1, -12, 1, -4);
             Text = Tab.Name;
-            TextSize = 13;
+            TextSize = 14;
             TextWrapped = true;
-            TextYAlignment = Enum.TextYAlignment.Center;
-            RichText = true;
+            RichText = true; -- Added to support color fonts
             ZIndex = 1;
             Parent = TabButton;
         });
 
+        local Blocker = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderSizePixel = 0;
+            Position = UDim2.new(1, -2, 0, 0);
+            Size = UDim2.new(0, 2, 1, 0);
+            BackgroundTransparency = 1;
+            ZIndex = 3;
+            Parent = TabButton;
+        });
+
+        Library:AddToRegistry(Blocker, {
+            BackgroundColor3 = 'MainColor';
+        });
+
+        -- Tab content frame
         local TabFrame = Library:Create('Frame', {
             Name = 'TabFrame',
             BackgroundTransparency = 1;
-            Position = UDim2.new(0, 2, 0, 2);
-            Size = UDim2.new(1, -4, 1, -4);
+            Position = UDim2.new(0, 0, 0, 0);
+            Size = UDim2.new(1, 0, 1, 0);
             Visible = false;
             ZIndex = 2;
             Parent = TabContainer;
         });
 
+        -- Top warning bar (same as original)
+        local TopBar, TopBarInner, TopBarLabel, TopBarTextLabel, TopBarLabelStroke, TopBarHighlight; 
+        do
+            TopBar = Library:Create('Frame', {
+                BackgroundColor3 = Library.BackgroundColor;
+                BorderColor3 = Color3.fromRGB(248, 51, 51);
+                BorderMode = Enum.BorderMode.Inset;
+                Position = UDim2.new(0, 8, 0, 8);
+                Size = UDim2.new(1, -16, 0, 0);
+                ZIndex = 2;
+                Parent = TabFrame;
+                Visible = false;
+            });
+
+            Library:Create('UICorner', {
+                CornerRadius = UDim.new(0, 8);
+                Parent = TopBar;
+            });
+
+            Library:Create('UIStroke', {
+                Color = Color3.fromRGB(248, 51, 51);
+                Thickness = 1;
+                Parent = TopBar;
+            });
+
+            TopBarInner = Library:Create('Frame', {
+                BackgroundColor3 = Color3.fromRGB(117, 22, 17);
+                BorderColor3 = Color3.new();
+                Size = UDim2.new(1, -2, 1, -2);
+                Position = UDim2.new(0, 1, 0, 1);
+                ZIndex = 4;
+                Parent = TopBar;
+            });
+
+            Library:Create('UICorner', {
+                CornerRadius = UDim.new(0, 8);
+                Parent = TopBarInner;
+            });
+
+            TopBarHighlight = Library:Create('Frame', {
+                BackgroundColor3 = Color3.fromRGB(255, 75, 75);
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 0, 2);
+                ZIndex = 5;
+                Parent = TopBarInner;
+            });
+
+            TopBarLabel = Library:Create('TextLabel', {
+                BackgroundTransparency = 1;
+                Font = Library.Font;
+                TextStrokeTransparency = 0;
+                Size = UDim2.new(1, 0, 0, 20);
+                Position = UDim2.new(0, 8, 0, 2);
+                TextSize = 14;
+                Text = "Text";
+                TextXAlignment = Enum.TextXAlignment.Left;
+                TextColor3 = Color3.fromRGB(255, 55, 55);
+                RichText = true;
+                ZIndex = 5;
+                Parent = TopBarInner;
+            });
+
+            TopBarLabelStroke = Library:ApplyTextStroke(TopBarLabel);
+            TopBarLabelStroke.Color = Color3.fromRGB(174, 3, 3);
+
+            TopBarTextLabel = Library:CreateLabel({
+                Position = UDim2.new(0, 8, 0, 22);
+                Size = UDim2.new(1, -12, 0, 14);
+                TextSize = 13;
+                Text = "Text";
+                TextWrapped = true,
+                TextXAlignment = Enum.TextXAlignment.Left;
+                TextYAlignment = Enum.TextYAlignment.Top;
+                RichText = true;
+                ZIndex = 5;
+                Parent = TopBarInner;
+            });
+            
+            Library:Create('Frame', {
+                BackgroundTransparency = 1;
+                Size = UDim2.new(1, 0, 0, 5);
+                Visible = true;
+                ZIndex = 1;
+                Parent = TopBarInner;
+            });
+        end
+        
+        -- Left and right content sides (same as original)
         local LeftSide = Library:Create('ScrollingFrame', {
             BackgroundTransparency = 1;
             BorderSizePixel = 0;
-            Position = UDim2.new(0, 4, 0, 4);
-            Size = UDim2.new(0.5, -6, 1, -8);
+            Position = UDim2.new(0, 8, 0, 8);
+            Size = UDim2.new(0.5, -12, 1, -16);
             CanvasSize = UDim2.new(0, 0, 0, 0);
-            ScrollBarThickness = 3;
+            BottomImage = '';
+            TopImage = '';
+            ScrollBarThickness = 4;
+            ScrollBarImageColor3 = Library.AccentColor;
+            ZIndex = 2;
+            Parent = TabFrame;
+        });
+
+        local RightSide = Library:Create('ScrollingFrame', {
+            BackgroundTransparency = 1;
+            BorderSizePixel = 0;
+            Position = UDim2.new(0.5, 4, 0, 8);
+            Size = UDim2.new(0.5, -12, 1, -16);
+            CanvasSize = UDim2.new(0, 0, 0, 0);
+            BottomImage = '';
+            TopImage = '';
+            ScrollBarThickness = 4;
             ScrollBarImageColor3 = Library.AccentColor;
             ZIndex = 2;
             Parent = TabFrame;
@@ -4921,18 +5776,6 @@ function Library:CreateWindow(...)
 
         Library:AddToRegistry(LeftSide, {
             ScrollBarImageColor3 = 'AccentColor';
-        });
-
-        local RightSide = Library:Create('ScrollingFrame', {
-            BackgroundTransparency = 1;
-            BorderSizePixel = 0;
-            Position = UDim2.new(0.5, 2, 0, 4);
-            Size = UDim2.new(0.5, -6, 1, -8);
-            CanvasSize = UDim2.new(0, 0, 0, 0);
-            ScrollBarThickness = 3;
-            ScrollBarImageColor3 = Library.AccentColor;
-            ZIndex = 2;
-            Parent = TabFrame;
         });
 
         Library:AddToRegistry(RightSide, {
@@ -4956,18 +5799,18 @@ function Library:CreateWindow(...)
         });
 
         Library:Create('UIPadding', {
-            PaddingLeft = UDim.new(0, 4),
-            PaddingRight = UDim.new(0, 4),
-            PaddingTop = UDim.new(0, 4),
-            PaddingBottom = UDim.new(0, 4),
+            PaddingLeft = UDim.new(0, 4);
+            PaddingRight = UDim.new(0, 4);
+            PaddingTop = UDim.new(0, 4);
+            PaddingBottom = UDim.new(0, 4);
             Parent = LeftSide;
         });
 
         Library:Create('UIPadding', {
-            PaddingLeft = UDim.new(0, 4),
-            PaddingRight = UDim.new(0, 4),
-            PaddingTop = UDim.new(0, 4),
-            PaddingBottom = UDim.new(0, 4),
+            PaddingLeft = UDim.new(0, 4);
+            PaddingRight = UDim.new(0, 4);
+            PaddingTop = UDim.new(0, 4);
+            PaddingBottom = UDim.new(0, 4);
             Parent = RightSide;
         });
 
@@ -5000,8 +5843,75 @@ function Library:CreateWindow(...)
 
         for _, Side in next, { LeftSide, RightSide } do
             Side:WaitForChild('UIListLayout'):GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-                Side.CanvasSize = UDim2.fromOffset(0, Side.UIListLayout.AbsoluteContentSize.Y + 8);
+                Side.CanvasSize = UDim2.fromOffset(0, Side.UIListLayout.AbsoluteContentSize.Y);
             end);
+        end;
+
+        function Tab:Resize()
+            if TopBar.Visible == true then
+                local Size = 5;
+                for _, Element in next, TopBarInner:GetChildren() do
+                    if (not Element:IsA('UIListLayout')) and Element.Visible then
+                        if Element == TopBarTextLabel then
+                            Size = Size + Element.TextBounds.Y;    
+                            continue                     
+                        end;
+                        Size = Size + Element.Size.Y.Offset;
+                    end;
+                end;
+                
+                TopBar.Size = UDim2.new(1, -16, 0, Size);
+                Size = Size + 10;
+                
+                LeftSide.Position = UDim2.new(0, 8, 0, 8 + Size);
+                LeftSide.Size = UDim2.new(0.5, -12, 1, -16 - Size);
+        
+                RightSide.Position = UDim2.new(0.5, 4, 0, 8 + Size);
+                RightSide.Size = UDim2.new(0.5, -12, 1, -16 - Size);
+            else
+                LeftSide.Position = UDim2.new(0, 8, 0, 8);
+                LeftSide.Size = UDim2.new(0.5, -12, 1, -16);
+        
+                RightSide.Position = UDim2.new(0.5, 4, 0, 8);
+                RightSide.Size = UDim2.new(0.5, -12, 1, -16);
+            end;
+        end;
+
+        function Tab:UpdateWarningBox(Info)
+            if typeof(Info.Visible) == "boolean" then
+                TopBar.Visible = Info.Visible;
+                Tab:Resize();
+            end;
+
+            if typeof(Info.Title) == "string" then
+                TopBarLabel.Text = Info.Title;
+            end;
+
+            if typeof(Info.Text) == "string" then
+                TopBarTextLabel.Text = Info.Text;
+                local Y = select(2, Library:GetTextBounds(Info.Text, Library.Font, 13, Vector2.new(TopBarTextLabel.AbsoluteSize.X, math.huge)));
+                TopBarTextLabel.Size = UDim2.new(1, -12, 0, Y);
+                Tab:Resize();
+            end;
+
+            TopBar.BorderColor3 = Info.IsNormal == true and Color3.fromRGB(27, 42, 53) or Color3.fromRGB(248, 51, 51)
+            TopBarInner.BorderColor3 = Info.IsNormal == true and Library.OutlineColor or Color3.fromRGB(0, 0, 0)
+            TopBarInner.BackgroundColor3 = Info.IsNormal == true and Library.BackgroundColor or Color3.fromRGB(117, 22, 17)
+            TopBarHighlight.BackgroundColor3 = Info.IsNormal == true and Library.AccentColor or Color3.fromRGB(255, 75, 75)
+             
+            TopBarLabel.TextColor3 = Info.IsNormal == true and Library.FontColor or Color3.fromRGB(255, 55, 55)
+            TopBarLabelStroke.Color = Info.IsNormal == true and Library.Black or Color3.fromRGB(174, 3, 3)
+
+            if not Library.RegistryMap[TopBarInner] then Library:AddToRegistry(TopBarInner, {}) end
+            if not Library.RegistryMap[TopBarHighlight] then Library:AddToRegistry(TopBarHighlight, {}) end
+            if not Library.RegistryMap[TopBarLabel] then Library:AddToRegistry(TopBarLabel, {}) end
+            if not Library.RegistryMap[TopBarLabelStroke] then Library:AddToRegistry(TopBarLabelStroke, {}) end
+
+            Library.RegistryMap[TopBarInner].Properties.BorderColor3 = Info.IsNormal == true and "OutlineColor" or nil;
+            Library.RegistryMap[TopBarInner].Properties.BackgroundColor3 = Info.IsNormal == true and "BackgroundColor" or nil;
+            Library.RegistryMap[TopBarHighlight].Properties.BackgroundColor3 = Info.IsNormal == true and "AccentColor" or nil;
+            Library.RegistryMap[TopBarLabel].Properties.TextColor3 = Info.IsNormal == true and "FontColor" or nil;
+            Library.RegistryMap[TopBarLabelStroke].Properties.Color = Info.IsNormal == true and "Black" or nil;
         end;
 
         function Tab:ShowTab()
@@ -5010,12 +5920,16 @@ function Library:CreateWindow(...)
                 Tab:HideTab();
             end;
 
-            TabButton.BackgroundColor3 = Library.AccentColor;
-            Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'AccentColor';
+            Blocker.BackgroundTransparency = 0;
+            TabButton.BackgroundColor3 = Library.MainColor;
+            Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
             TabFrame.Visible = true;
+
+            Tab:Resize();
         end;
 
         function Tab:HideTab()
+            Blocker.BackgroundTransparency = 1;
             TabButton.BackgroundColor3 = Library.BackgroundColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
             TabFrame.Visible = false;
@@ -5033,6 +5947,8 @@ function Library:CreateWindow(...)
         function Tab:SetName(Name)
             if typeof(Name) == "string" then
                 Tab.Name = Name;
+                local TabButtonHeight = Library:GetTextBounds(Tab.Name, Library.Font, 14) + 12;
+                TabButton.Size = UDim2.new(1, -8, 0, TabButtonHeight);
                 TabButtonLabel.Text = Tab.Name;
             end
         end;
@@ -5041,10 +5957,10 @@ function Library:CreateWindow(...)
             local Groupbox = {};
 
             local BoxOuter = Library:Create('Frame', {
-                BackgroundColor3 = Library.MainColor;
-                BorderColor3 = Library.AccentColor;
-                BorderSizePixel = 2,
-                Size = UDim2.new(1, 0, 0, 40);
+                BackgroundColor3 = Library.BackgroundColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 0, 507 + 2);
                 ZIndex = 2;
                 Parent = Info.Side == 1 and LeftSide or RightSide;
             });
@@ -5054,23 +5970,28 @@ function Library:CreateWindow(...)
                 Parent = BoxOuter;
             });
 
+            Library:Create('UIStroke', {
+                Color = Library.OutlineColor;
+                Thickness = 1;
+                Parent = BoxOuter;
+            });
+
             Library:AddToRegistry(BoxOuter, {
-                BackgroundColor3 = 'MainColor';
-                BorderColor3 = 'AccentColor';
+                BackgroundColor3 = 'BackgroundColor';
+                BorderColor3 = 'OutlineColor';
             });
 
             local BoxInner = Library:Create('Frame', {
                 BackgroundColor3 = Library.BackgroundColor;
                 BorderColor3 = Color3.new(0, 0, 0);
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -4, 1, -4);
-                Position = UDim2.new(0, 2, 0, 2);
+                Size = UDim2.new(1, -2, 1, -2);
+                Position = UDim2.new(0, 1, 0, 1);
                 ZIndex = 4;
                 Parent = BoxOuter;
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = UDim.new(0, 8);
                 Parent = BoxInner;
             });
 
@@ -5078,35 +5999,38 @@ function Library:CreateWindow(...)
                 BackgroundColor3 = 'BackgroundColor';
             });
 
+            local Highlight = Library:Create('Frame', {
+                BackgroundColor3 = Library.AccentColor;
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 0, 2);
+                ZIndex = 5;
+                Parent = BoxInner;
+            });
+
+            Library:Create('UICorner', {
+                CornerRadius = UDim.new(0, 2);
+                Parent = Highlight;
+            });
+
+            Library:AddToRegistry(Highlight, {
+                BackgroundColor3 = 'AccentColor';
+            });
+
             local GroupboxLabel = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 22);
+                Size = UDim2.new(1, 0, 0, 20);
                 Position = UDim2.new(0, 8, 0, 2);
-                TextSize = 14;
+                TextSize = 13;
                 Text = Info.Name;
                 TextXAlignment = Enum.TextXAlignment.Left;
-                TextYAlignment = Enum.TextYAlignment.Center;
-                RichText = true;
+                RichText = true; -- Added to support color fonts
                 ZIndex = 5;
                 Parent = BoxInner;
-            });
-
-            Library:Create('Frame', {
-                BackgroundColor3 = Library.AccentColor;
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -16, 0, 1);
-                Position = UDim2.new(0, 8, 0, 24);
-                ZIndex = 5;
-                Parent = BoxInner;
-            });
-
-            Library:AddToRegistry(Library:Create('Frame', {Parent = BoxInner}), {
-                BackgroundColor3 = 'AccentColor';
             });
 
             local Container = Library:Create('Frame', {
                 BackgroundTransparency = 1;
-                Position = UDim2.new(0, 8, 0, 26);
-                Size = UDim2.new(1, -16, 1, -30);
+                Position = UDim2.new(0, 8, 0, 22);
+                Size = UDim2.new(1, -12, 1, -24);
                 ZIndex = 1;
                 Parent = BoxInner;
             });
@@ -5114,24 +6038,28 @@ function Library:CreateWindow(...)
             Library:Create('UIListLayout', {
                 FillDirection = Enum.FillDirection.Vertical;
                 SortOrder = Enum.SortOrder.LayoutOrder;
-                Padding = UDim.new(0, 4);
+                Parent = Container;
+            });
+
+            Library:Create('UIPadding', {
+                PaddingBottom = UDim.new(0, 4);
                 Parent = Container;
             });
 
             function Groupbox:Resize()
-                local Size = 30;
+                local Size = 0;
                 for _, Element in next, Groupbox.Container:GetChildren() do
                     if (not Element:IsA('UIListLayout')) and Element.Visible then
-                        Size = Size + Element.Size.Y.Offset + 4;
+                        Size = Size + Element.Size.Y.Offset;
                     end;
                 end;
-                BoxOuter.Size = UDim2.new(1, 0, 0, Size);
+                BoxOuter.Size = UDim2.new(1, 0, 0, (24 * DPIScale + Size) + 4);
             end;
 
             Groupbox.Container = Container;
             setmetatable(Groupbox, BaseGroupbox);
 
-            Groupbox:AddBlank(2);
+            Groupbox:AddBlank(3);
             Groupbox:Resize();
 
             Tab.Groupboxes[Info.Name] = Groupbox;
@@ -5153,10 +6081,10 @@ function Library:CreateWindow(...)
             };
 
             local BoxOuter = Library:Create('Frame', {
-                BackgroundColor3 = Library.MainColor;
-                BorderColor3 = Library.AccentColor;
-                BorderSizePixel = 2,
-                Size = UDim2.new(1, 0, 0, 40);
+                BackgroundColor3 = Library.BackgroundColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 0, 0);
                 ZIndex = 2;
                 Parent = Info.Side == 1 and LeftSide or RightSide;
             });
@@ -5166,23 +6094,28 @@ function Library:CreateWindow(...)
                 Parent = BoxOuter;
             });
 
+            Library:Create('UIStroke', {
+                Color = Library.OutlineColor;
+                Thickness = 1;
+                Parent = BoxOuter;
+            });
+
             Library:AddToRegistry(BoxOuter, {
-                BackgroundColor3 = 'MainColor';
-                BorderColor3 = 'AccentColor';
+                BackgroundColor3 = 'BackgroundColor';
+                BorderColor3 = 'OutlineColor';
             });
 
             local BoxInner = Library:Create('Frame', {
                 BackgroundColor3 = Library.BackgroundColor;
                 BorderColor3 = Color3.new(0, 0, 0);
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -4, 1, -4);
-                Position = UDim2.new(0, 2, 0, 2);
+                Size = UDim2.new(1, -2, 1, -2);
+                Position = UDim2.new(0, 1, 0, 1);
                 ZIndex = 4;
                 Parent = BoxOuter;
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = UDim.new(0, 8);
                 Parent = BoxInner;
             });
 
@@ -5190,19 +6123,42 @@ function Library:CreateWindow(...)
                 BackgroundColor3 = 'BackgroundColor';
             });
 
+            local Highlight = Library:Create('Frame', {
+                BackgroundColor3 = Library.AccentColor;
+                BorderSizePixel = 0;
+                Size = UDim2.new(1, 0, 0, 2);
+                ZIndex = 10;
+                Parent = BoxInner;
+            });
+
+            Library:Create('UICorner', {
+                CornerRadius = UDim.new(0, 2);
+                Parent = Highlight;
+            });
+
+            Library:AddToRegistry(Highlight, {
+                BackgroundColor3 = 'AccentColor';
+            });
+
             local TabboxButtons = Library:Create('Frame', {
                 BackgroundTransparency = 1;
-                Position = UDim2.new(0, 8, 0, 6);
-                Size = UDim2.new(1, -16, 0, 22);
+                Position = UDim2.new(0, 0, 0, 1);
+                Size = UDim2.new(1, 0, 0, 22);
                 ZIndex = 5;
                 Parent = BoxInner;
             });
 
             Library:Create('UIListLayout', {
+                Padding = UDim.new(0, 4);
                 FillDirection = Enum.FillDirection.Horizontal;
                 HorizontalAlignment = Enum.HorizontalAlignment.Left;
                 SortOrder = Enum.SortOrder.LayoutOrder;
-                Padding = UDim.new(0, 4);
+                Parent = TabboxButtons;
+            });
+
+            Library:Create('UIPadding', {
+                PaddingLeft = UDim.new(0, 4);
+                PaddingRight = UDim.new(0, 4);
                 Parent = TabboxButtons;
             });
 
@@ -5210,10 +6166,10 @@ function Library:CreateWindow(...)
                 local Tab = {};
 
                 local Button = Library:Create('Frame', {
-                    BackgroundColor3 = Library.BackgroundColor;
-                    BorderColor3 = Library.AccentColor;
-                    BorderSizePixel = 2,
-                    Size = UDim2.new(0, 70, 1, 0);
+                    BackgroundColor3 = Library.MainColor;
+                    BorderColor3 = Library.OutlineColor;
+                    BorderSizePixel = 0;
+                    Size = UDim2.new(0.5, -2, 1, 0);
                     ZIndex = 6;
                     Parent = TabboxButtons;
                 });
@@ -5223,26 +6179,45 @@ function Library:CreateWindow(...)
                     Parent = Button;
                 });
 
+                Library:Create('UIStroke', {
+                    Color = Library.OutlineColor;
+                    Thickness = 1;
+                    Parent = Button;
+                });
+
                 Library:AddToRegistry(Button, {
-                    BackgroundColor3 = 'BackgroundColor';
-                    BorderColor3 = 'AccentColor';
+                    BackgroundColor3 = 'MainColor';
+                    BorderColor3 = 'OutlineColor';
                 });
 
                 local ButtonLabel = Library:CreateLabel({
                     Size = UDim2.new(1, 0, 1, 0);
-                    TextSize = 12;
+                    TextSize = 13;
                     Text = Name;
                     TextXAlignment = Enum.TextXAlignment.Center;
-                    TextYAlignment = Enum.TextYAlignment.Center;
-                    RichText = true;
+                    RichText = true; -- Added to support color fonts
                     ZIndex = 7;
                     Parent = Button;
                 });
 
+                local Block = Library:Create('Frame', {
+                    BackgroundColor3 = Library.BackgroundColor;
+                    BorderSizePixel = 0;
+                    Position = UDim2.new(0, 0, 1, -1);
+                    Size = UDim2.new(1, 0, 0, 1);
+                    Visible = false;
+                    ZIndex = 9;
+                    Parent = Button;
+                });
+
+                Library:AddToRegistry(Block, {
+                    BackgroundColor3 = 'BackgroundColor';
+                });
+
                 local Container = Library:Create('Frame', {
                     BackgroundTransparency = 1;
-                    Position = UDim2.new(0, 8, 0, 32);
-                    Size = UDim2.new(1, -16, 1, -36);
+                    Position = UDim2.new(0, 8, 0, 26);
+                    Size = UDim2.new(1, -16, 1, -30);
                     ZIndex = 1;
                     Visible = false;
                     Parent = BoxInner;
@@ -5251,7 +6226,11 @@ function Library:CreateWindow(...)
                 Library:Create('UIListLayout', {
                     FillDirection = Enum.FillDirection.Vertical;
                     SortOrder = Enum.SortOrder.LayoutOrder;
-                    Padding = UDim.new(0, 4);
+                    Parent = Container;
+                });
+
+                Library:Create('UIPadding', {
+                    PaddingBottom = UDim.new(0, 4);
                     Parent = Container;
                 });
 
@@ -5261,33 +6240,46 @@ function Library:CreateWindow(...)
                     end;
 
                     Container.Visible = true;
-                    Button.BackgroundColor3 = Library.AccentColor;
-                    Library.RegistryMap[Button].Properties.BackgroundColor3 = 'AccentColor';
+                    Block.Visible = true;
+                    Button.BackgroundColor3 = Library.BackgroundColor;
+                    Library.RegistryMap[Button].Properties.BackgroundColor3 = 'BackgroundColor';
                     Tab:Resize();
                 end;
 
                 function Tab:Hide()
                     Container.Visible = false;
-                    Button.BackgroundColor3 = Library.BackgroundColor;
-                    Library.RegistryMap[Button].Properties.BackgroundColor3 = 'BackgroundColor';
+                    Block.Visible = false;
+                    Button.BackgroundColor3 = Library.MainColor;
+                    Library.RegistryMap[Button].Properties.BackgroundColor3 = 'MainColor';
                 end;
 
                 function Tab:Resize()
+                    local TabCount = 0;
+                    for _, Tab in next, Tabbox.Tabs do
+                        TabCount = TabCount + 1;
+                    end;
+
+                    for _, Button in next, TabboxButtons:GetChildren() do
+                        if not Button:IsA('UIListLayout') and not Button:IsA('UIPadding') then
+                            Button.Size = UDim2.new(1 / TabCount, -4, 1, 0);
+                        end;
+                    end;
+
                     if (not Container.Visible) then
                         return;
                     end;
 
-                    local Size = 32;
+                    local Size = 0;
                     for _, Element in next, Tab.Container:GetChildren() do
                         if (not Element:IsA('UIListLayout')) and Element.Visible then
-                            Size = Size + Element.Size.Y.Offset + 4;
+                            Size = Size + Element.Size.Y.Offset;
                         end;
                     end;
-                    BoxOuter.Size = UDim2.new(1, 0, 0, Size);
+                    BoxOuter.Size = UDim2.new(1, 0, 0, (26 * DPIScale + Size) + 8);
                 end;
 
                 Button.InputBegan:Connect(function(Input)
-                    if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) then
+                    if (Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame()) or Input.UserInputType == Enum.UserInputType.Touch then
                         Tab:Show();
                         Tab:Resize();
                     end;
@@ -5298,10 +6290,10 @@ function Library:CreateWindow(...)
 
                 setmetatable(Tab, BaseGroupbox);
 
-                Tab:AddBlank(2);
+                Tab:AddBlank(3);
                 Tab:Resize();
 
-                if #TabboxButtons:GetChildren() == 1 then
+                if #TabboxButtons:GetChildren() - 2 == 2 then
                     Tab:Show();
                 end;
 
@@ -5322,9 +6314,13 @@ function Library:CreateWindow(...)
         end;
 
         TabButton.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                 Tab:ShowTab();
             end;
+        end);
+
+        TopBar:GetPropertyChangedSignal("Visible"):Connect(function()
+            Tab:Resize();
         end);
 
         Library.TotalTabs = Library.TotalTabs + 1;
@@ -5339,7 +6335,7 @@ function Library:CreateWindow(...)
     local TransparencyCache = {};
     local Toggled = false;
     local Fading = false;
-
+    
     function Library:Toggle(Toggling)
         if typeof(Toggling) == "boolean" and Toggling == Toggled then return end;
         if Fading then return end;
@@ -5366,7 +6362,7 @@ function Library:CreateWindow(...)
                     CursorOutline.Filled = false
                     CursorOutline.Color = Color3.new(0, 0, 0)
                     CursorOutline.Visible = Library.ShowCustomCursor
-
+                    
                     local OldMouseIconState = InputService.MouseIconEnabled
                     pcall(function() RunService:UnbindFromRenderStep("LinoriaCursor") end)
                     RunService:BindToRenderStep("LinoriaCursor", Enum.RenderPriority.Camera.Value - 1, function()
@@ -5458,9 +6454,8 @@ function Library:CreateWindow(...)
 
     if Library.IsMobile then
         local ToggleUIOuter = Library:Create('Frame', {
-            BorderColor3 = Library.AccentColor;
-            BorderSizePixel = 2,
-            Position = UDim2.new(0.01, 0, 0.01, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Position = UDim2.new(0.008, 0, 0.018, 0);
             Size = UDim2.new(0, 80, 0, 32);
             ZIndex = 200;
             Visible = true;
@@ -5471,32 +6466,65 @@ function Library:CreateWindow(...)
             CornerRadius = UDim.new(0, 8);
             Parent = ToggleUIOuter;
         });
-
+    
         local ToggleUIInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Color3.new(0, 0, 0);
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, -4, 1, -4);
-            Position = UDim2.new(0, 2, 0, 2);
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 201;
             Parent = ToggleUIOuter;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 6);
+            CornerRadius = UDim.new(0, 8);
             Parent = ToggleUIInner;
         });
 
-        Library:AddToRegistry(ToggleUIOuter, {
+        Library:Create('UIStroke', {
+            Color = Library.AccentColor;
+            Thickness = 1;
+            Parent = ToggleUIInner;
+        });
+    
+        Library:AddToRegistry(ToggleUIInner, {
             BorderColor3 = 'AccentColor';
         });
-
-        Library:AddToRegistry(ToggleUIInner, {
-            BackgroundColor3 = 'BackgroundColor';
+    
+        local ToggleUIInnerFrame = Library:Create('Frame', {
+            BackgroundColor3 = Color3.new(1, 1, 1);
+            BorderSizePixel = 0;
+            Position = UDim2.new(0, 1, 0, 1);
+            Size = UDim2.new(1, -2, 1, -2);
+            ZIndex = 202;
+            Parent = ToggleUIInner;
         });
 
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 8);
+            Parent = ToggleUIInnerFrame;
+        });
+    
+        local ToggleUIGradient = Library:Create('UIGradient', {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+                ColorSequenceKeypoint.new(1, Library.MainColor),
+            });
+            Rotation = -90;
+            Parent = ToggleUIInnerFrame;
+        });
+    
+        Library:AddToRegistry(ToggleUIGradient, {
+            Color = function()
+                return ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+                    ColorSequenceKeypoint.new(1, Library.MainColor),
+                });
+            end
+        });
+    
         local ToggleUIButton = Library:Create('TextButton', {
-            Position = UDim2.new(0, 6, 0, 0);
+            Position = UDim2.new(0, 8, 0, 0);
             Size = UDim2.new(1, -12, 1, 0);
             BackgroundTransparency = 1;
             Font = Library.Font;
@@ -5504,17 +6532,109 @@ function Library:CreateWindow(...)
             TextColor3 = Library.FontColor;
             TextSize = 13;
             TextXAlignment = Enum.TextXAlignment.Left;
-            TextYAlignment = Enum.TextYAlignment.Center;
-            TextStrokeTransparency = 1;
-            RichText = true;
+            TextStrokeTransparency = 0;
+            RichText = true; -- Added to support color fonts
             ZIndex = 203;
-            Parent = ToggleUIInner;
+            Parent = ToggleUIInnerFrame;
         });
-
+    
         Library:MakeDraggableUsingParent(ToggleUIButton, ToggleUIOuter);
 
         ToggleUIButton.MouseButton1Down:Connect(function()
             Library:Toggle()
+        end)
+
+        -- Lock UI button
+        local LockUIOuter = Library:Create('Frame', {
+            BorderColor3 = Color3.new(0, 0, 0);
+            Position = UDim2.new(0.008, 0, 0.075, 0);
+            Size = UDim2.new(0, 80, 0, 32);
+            ZIndex = 200;
+            Visible = true;
+            Parent = ScreenGui;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 8);
+            Parent = LockUIOuter;
+        });
+    
+        local LockUIInner = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 1, 0);
+            ZIndex = 201;
+            Parent = LockUIOuter;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 8);
+            Parent = LockUIInner;
+        });
+
+        Library:Create('UIStroke', {
+            Color = Library.AccentColor;
+            Thickness = 1;
+            Parent = LockUIInner;
+        });
+    
+        Library:AddToRegistry(LockUIInner, {
+            BorderColor3 = 'AccentColor';
+        });
+    
+        local LockUIInnerFrame = Library:Create('Frame', {
+            BackgroundColor3 = Color3.new(1, 1, 1);
+            BorderSizePixel = 0;
+            Position = UDim2.new(0, 1, 0, 1);
+            Size = UDim2.new(1, -2, 1, -2);
+            ZIndex = 202;
+            Parent = LockUIInner;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 8);
+            Parent = LockUIInnerFrame;
+        });
+    
+        local LockUIGradient = Library:Create('UIGradient', {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+                ColorSequenceKeypoint.new(1, Library.MainColor),
+            });
+            Rotation = -90;
+            Parent = LockUIInnerFrame;
+        });
+    
+        Library:AddToRegistry(LockUIGradient, {
+            Color = function()
+                return ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+                    ColorSequenceKeypoint.new(1, Library.MainColor),
+                });
+            end
+        });
+    
+        local LockUIButton = Library:Create('TextButton', {
+            Position = UDim2.new(0, 8, 0, 0);
+            Size = UDim2.new(1, -12, 1, 0);
+            BackgroundTransparency = 1;
+            Font = Library.Font;
+            Text = "Lock UI";
+            TextColor3 = Library.FontColor;
+            TextSize = 13;
+            TextXAlignment = Enum.TextXAlignment.Left;
+            TextStrokeTransparency = 0;
+            RichText = true; -- Added to support color fonts
+            ZIndex = 203;
+            Parent = LockUIInnerFrame;
+        });
+    
+        Library:MakeDraggableUsingParent(LockUIButton, LockUIOuter);
+        
+        LockUIButton.MouseButton1Down:Connect(function()
+            Library.CantDragForced = not Library.CantDragForced;
+            LockUIButton.Text = Library.CantDragForced and "Unlock UI" or "Lock UI";
         end)
     end;
 
